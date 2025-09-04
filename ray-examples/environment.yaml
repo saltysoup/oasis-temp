@@ -1,0 +1,9 @@
+name: oasis
+channels:
+  - pytorch
+  - nvidia
+  - conda-forge
+  - defaults
+dependencies:
+  - ray[default]
+
