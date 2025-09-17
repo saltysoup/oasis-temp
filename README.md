@@ -1,7 +1,7 @@
 # Oasis 🏝️
-## Nearmap ML Training on GCP
+## ML Training on GCP
 
-A proof-of-concept for migrating Nearmap's ML training infrastructure to Google Cloud Platform using Ray on GKE with Dynamic Workload Scheduling (DWS), Custom Compute Class, and H200 GPUs with RDMA support.
+A proof-of-concept for ML training infrastructure to Google Cloud Platform using Ray on GKE with Dynamic Workload Scheduling (DWS), Custom Compute Class, and H200 GPUs with RDMA support.
 
 ## Overview
 
@@ -60,16 +60,4 @@ Before setting up the Oasis POC, ensure you have:
 3. **Run Ray examples:**  
    Once the infrastructure is ready and the Ray cluster is up, navigate to the `ray-examples` folder for sample jobs, benchmarking scripts, and usage examples.
 
-## To Do
 
-- [x] $10k Credits
-- [x] GCP Project
-- [x] Data Transfer
-- [x] Okta GCP Integration
-- [ ] IAM
-- [x] GPU Quotas
-- [x] Infra Setup
-- [x] Secrets (Conda + W&B)
-- [ ] Refactor apollo2 and skynet
-- [ ] Terraform
-- [ ] IAP
