@@ -1,91 +1,138 @@
-# Infra Setup
+# Setup
 
-This document outlines the infrastructure components, setup instructions, and deployment steps for this project.
-
-## Infrastructure Components
+This document outlines the infrastructure components, setup instructions, and
+deployment steps for this project.
 
 The Proof of Concept (POC) will create the following infrastructure components:
 
-*   **Networking:**
-    *   1 x RDMA VPC
-    *   2 x Standard VPC (for north-south traffic)
-*   **Kubernetes (GKE):**
-    *   GKE cluster with multi-networking enabled.
-    *   GCS Fuse addon for GKE.
-    *   GKE network objects specifically for RDMA NICs.
-    *   NCCL RDMA binaries for GPU communication.
-    *   Custom Compute Class for DWS Flex, with provisioning starting with Spot instances and a fallback to On-Demand.
-    *   GCS bucket for training data.
-*   **Identity & Access Management (IAM):**
-    *   IAM policies to grant Kubernetes service accounts access to the GCS bucket and GCP secrets.
+- **Networking:**
+  - 1 x RDMA VPC
+  - 2 x Standard VPC (for north-south traffic)
+- **Kubernetes (GKE):**
+  - GKE cluster with multi-networking enabled.
+  - GCS Fuse addon for GKE.
+  - GKE network objects specifically for RDMA NICs.
+  - NCCL RDMA binaries for GPU communication.
+  - Custom Compute Class for DWS Flex, with provisioning starting with Spot
+    instances and a fallback to On-Demand.
+  - GCS bucket for training data.
+- **Identity & Access Management (IAM):**
+  - IAM policies to grant Kubernetes service accounts access to the GCS bucket
+    and GCP secrets.
 
 ## Setup Instructions
 
-### 1. Infrastructure Provisioning
+### 1. Base Infrastructure Provisioning
 
-Deploy the cloud infrastructure using Terraform.
+Navigate to the Terraform directory:
 
-1.  Navigate to the Terraform directory:
-    ```bash
-    cd infra/tf
-    ```
-2.  Initialize and apply the Terraform configuration:
-    ```bash
-    terraform init
-    terraform apply
-    ```
+```bash
+cd infra/base
+```
+
+Log in with your
+[ADC](https://cloud.google.com/docs/authentication/provide-credentials-adc):
+
+```sh
+gcloud auth application-default login
+```
+
+Set your active GCP project:
+
+```sh
+gcloud config set project <YOUR_PROJECT_ID>
+export GCLOUD_PROJECT=$(gcloud config get project)
+```
+
+(See
+[Provider Default Values Configuration](https://registry.terraform.io/providers/hashicorp/google/latest/docs/guides/provider_reference#provider-default-values-configuration))
+
+The GKE cluster is private so your IP is added to the list of authorized
+networks to allow for control plane access. The command below may not work
+correctly, depending on your network environment. If you find it does not work,
+manually set the `TF_VAR_client_ip` variable to an appropriate CIDR block.
+
+```sh
+export TF_VAR_client_ip=$(curl -s checkip.dyndns.org | sed -e 's/.*Current IP Address: //' -e 's/<.*$//')/32
+```
+
+Initialize and plan the Terraform configuration:
+
+```sh
+terraform init
+terraform plan
+```
 
 The `terraform apply` command will deploy the following cloud resources:
 
-*   `gcs.tf`: GCS bucket for training data.
-*   `gke.tf`: GKE Standard cluster with RDMA networking, DWS Flex, and Spot `a3-ultragpu-8g` (H200) nodepools.
-*   `gpu-cluster.tfvars`, `variables.tf`: Environment variables.
-*   `iam.tf`: IAM policies to grant the Kubernetes service account read-write access to the training data bucket and read-access to GCP Secrets.
-*   `network.tf`: 3 x VPCs, subnets, and firewall rules for gVNICs and RDMA.
+- `services.tf`: Configures the required Google Cloud APIs
+- `gcs.tf`: GCS bucket for training data.
+- `gke.tf`: GKE Standard cluster with RDMA networking, DWS Flex, and Spot
+  `a3-ultragpu-8g` (H200) nodepools.
+- `iam.tf`: IAM policies to grant the Kubernetes service account read-write
+  access to the training data bucket and read-access to GCP Secrets.
+- `network.tf`: 3 x VPCs, subnets, and firewall rules for gVNICs and RDMA.
+- `cluster.tf`: configures the GKE cluster.
+- `ray.tf`: configures the Ray cluster.
 
-### 2. GKE Cluster Setup
+_You can use `terraform.tfvars` to override the variable defaults._
 
-After the GKE cluster is deployed by Terraform, complete the cluster setup by running the following script:
+If you're happy with the plan, `apply` it:
 
-```bash
-cd infra
-bash setup-cluster.sh
+```sh
+terraform apply
 ```
 
-This script will:
+```sh
+terraform output >../ray/terraform.tfvars
+```
 
-*   Install the custom compute class.
-*   Configure GKE networks.
-*   Start the RDMA sidecar (automatically enables RDMA for GPU nodes).
-*   Set up the Kubernetes service account (used for GCS Fuse access for worker pods).
+In the output you'll see an entry for `gke connection` - the value provides the
+command for getting the authentication details for the cluster. Copy the command
+and run it.
 
-### 3. Deploy Ray Cluster
+### 2. Build a custom Ray image
 
-Once the GKE cluster is set up, proceed to deploying a Ray cluster. This will automatically scale up the GPU nodes as needed.
+This next step runs a script that will build the Ray server image using Cloud
+Build and deploy it to Artifact Registry.
 
-Refer to the `ray-examples/README.md` for detailed deployment instructions.
+```sh
+cd ..
+./build.sh
+```
 
-### 4. IAM Policy for Secret Access (Ray Cluster)
+_The build can take some time so grab a beverage._
 
-The following steps define and apply an IAM policy binding at the Project level. This policy allows the Ray Kubernetes Service Account (KSA) to access specific secrets (WANDB_API_KEY and CONDA_TOKEN) in a designated region.
+### 3. Ray cluster
 
-```bash
-KSA_NAME="oasis-ray"
-NAMESPACE="default"
-# GKE_PROJECT_ID="YOUR_GKE_PROJECT_ID" # e.g., nm-ai-sandbox
-PROJECT_NUMBER="820082097244"
-SECRET_LOCATION="australia-southeast1"
+```sh
+cd ray
+```
 
-# 1. Define the Workload Identity Principal
-MEMBER_PRINCIPAL="principal://iam.googleapis.com/projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/${GKE_PROJECT_ID}.svc.id.goog/subject/ns/${NAMESPACE}/sa/${KSA_NAME}"
+```sh
+terraform init
+terraform plan
+```
 
-# 2. Define the Condition Expression (CEL)
-# This expression checks if the resource being accessed matches EITHER the WANDB key OR the CONDA token in the specific region.
-CONDITION_EXPRESSION="resource.name == 'projects/${PROJECT_NUMBER}/locations/${SECRET_LOCATION}/secrets/WANDB_API_KEY' || resource.name == 'projects/${PROJECT_NUMBER}/locations/${SECRET_LOCATION}/secrets/CONDA_TOKEN'"
+## Explore the Ray Dashboard
 
-# 3. Apply the IAM policy binding at the Project level with the condition
-gcloud projects add-iam-policy-binding $PROJECT_NUMBER \
-  --role=roles/secretmanager.secretAccessor \
-  --member="$MEMBER_PRINCIPAL" \
-  --condition="title=RestrictToRaySecrets,description=Allow access only to WANDB and CONDA secrets in australia-southeast1,expression=${CONDITION_EXPRESSION}"
+Open a **new terminal** and run the following command to access the Ray head
+node services:
+
+```
+kubectl port-forward svc/ray-dashboard-service  8265:8265 2>&1 >/dev/null &
+```
+
+You should be able to access http://localhost:8265/ in your browser.
+
+## Teardown
+
+```sh
+cd ray
+terraform destroy
+```
+
+```sh
+cd ../base
+terraform destroy
 ```
