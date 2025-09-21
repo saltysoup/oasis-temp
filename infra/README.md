@@ -72,8 +72,6 @@ The `terraform apply` command will deploy the following cloud resources:
 - `iam.tf`: IAM policies to grant the Kubernetes service account read-write
   access to the training data bucket and read-access to GCP Secrets.
 - `network.tf`: 3 x VPCs, subnets, and firewall rules for gVNICs and RDMA.
-- `cluster.tf`: configures the GKE cluster.
-- `ray.tf`: configures the Ray cluster.
 
 _You can use `terraform.tfvars` to override the variable defaults._
 
@@ -83,13 +81,15 @@ If you're happy with the plan, `apply` it:
 terraform apply
 ```
 
+We'll use the outputs in the deployment of the Ray cluster:
+
 ```sh
 terraform output >../ray/terraform.tfvars
 ```
 
-In the output you'll see an entry for `gke connection` - the value provides the
-command for getting the authentication details for the cluster. Copy the command
-and run it.
+Note: In the output you'll see an entry for `gke connection` - the value
+provides the command for getting the authentication details for the cluster.
+**Copy the command and run it before moving to the next step.**
 
 ### 2. Build a custom Ray image
 
@@ -105,13 +105,40 @@ _The build can take some time so grab a beverage._
 
 ### 3. Ray cluster
 
+Switch into the `ray` directory:
+
 ```sh
 cd ray
 ```
 
+The Terraform configuration variables should appear in the `terraform.tfvars`
+you created from the output in Step 1.
+
+Initialize and plan the Terraform configuration:
+
 ```sh
 terraform init
 terraform plan
+```
+
+_You may see warnings regarding unnecessary variables in `terraform.tfvars` -
+you can ignore these._
+
+The `terraform apply` command will deploy the following cloud resources:
+
+- `cluster.tf`: Configures GKE with the following:
+  - A Custom Compute Class named `h200-ccc` that sets the VM/GPU preferences
+  - Configures the networking setup, including Remote direct memory access
+    (RDMA) and
+    [Google Virtual NIC (gVNIC)](https://cloud.google.com/kubernetes-engine/docs/how-to/using-gvnic)
+- `ray.tf`: Configures the Ray cluster, including the Ray dashboard and an
+  ingress load balancer for access to the dashboard
+- `iam.tf`: Adds required access for the Ray environment
+
+If you're happy with the plan, `apply` it:
+
+```sh
+terraform apply
 ```
 
 ## Explore the Ray Dashboard
@@ -127,10 +154,16 @@ You should be able to access http://localhost:8265/ in your browser.
 
 ## Teardown
 
+You can remove the deployed infrastructure using the `terraform destroy` command.
+
+To destroy the Ray server environment:
+
 ```sh
 cd ray
 terraform destroy
 ```
+
+To destroy the base infrastructure:
 
 ```sh
 cd ../base
