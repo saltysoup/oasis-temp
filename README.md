@@ -66,6 +66,8 @@ provides further details for working with `kubectl` and GKE.
 [Install Miniconda](https://www.anaconda.com/docs/getting-started/miniconda/install)
 on your system.
 
+You _may_ need to add `conda-forge` to your Conda channels:
+
 ```sh
 conda config --add channels conda-forge
 ```
