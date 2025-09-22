@@ -154,7 +154,8 @@ You should be able to access http://localhost:8265/ in your browser.
 
 ## Teardown
 
-You can remove the deployed infrastructure using the `terraform destroy` command.
+You can remove the deployed infrastructure using the `terraform destroy`
+command.
 
 To destroy the Ray server environment:
 
@@ -169,3 +170,5 @@ To destroy the base infrastructure:
 cd ../base
 terraform destroy
 ```
+
+Note: You may have to run `destroy` more than once.

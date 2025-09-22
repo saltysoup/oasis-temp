@@ -101,9 +101,32 @@ resource "google_container_cluster" "primary" {
     }
   }
 
+  # See: https://cloud.google.com/kubernetes-engine/docs/add-on/ray-on-gke/how-to/collect-view-logs-metrics#requirements_and_limitations
+  logging_config {
+    enable_components = [
+      "SYSTEM_COMPONENTS",
+      "WORKLOADS",
+    ]
+  }
+
+  monitoring_config {
+    managed_prometheus {
+      enabled = true
+    }
+  }
+
   addons_config {
     gcs_fuse_csi_driver_config { enabled = true }
-    ray_operator_config { enabled = true }
+    ray_operator_config {
+      enabled = true
+      # See: https://cloud.google.com/kubernetes-engine/docs/add-on/ray-on-gke/how-to/collect-view-logs-metrics
+      ray_cluster_logging_config {
+        enabled = true
+      }
+      ray_cluster_monitoring_config {
+        enabled = true
+      }
+    }
   }
 
   secret_manager_config { enabled = true }

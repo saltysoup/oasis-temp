@@ -276,14 +276,7 @@ resource "kubernetes_manifest" "ray_cluster" {
   depends_on = [
     kubernetes_manifest.ccc,
     kubernetes_manifest.gkenetworkparamset_gvnic_1,
-    kubernetes_manifest.network_rdma_0,
-    kubernetes_manifest.network_rdma_1,
-    kubernetes_manifest.network_rdma_2,
-    kubernetes_manifest.network_rdma_3,
-    kubernetes_manifest.network_rdma_4,
-    kubernetes_manifest.network_rdma_5,
-    kubernetes_manifest.network_rdma_6,
-    kubernetes_manifest.network_rdma_7,
+    kubernetes_manifest.network_rdma,
   ]
 }
 

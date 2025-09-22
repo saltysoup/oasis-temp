@@ -64,266 +64,38 @@ resource "kubernetes_manifest" "network_gvnic_1" {
   }
 }
 
-resource "kubernetes_manifest" "gkenetworkparamset_rdma_0" {
+resource "kubernetes_manifest" "gkenetworkparamset_rdma" {
+  count = 8
   manifest = {
     "apiVersion" = "networking.gke.io/v1"
     "kind"       = "GKENetworkParamSet"
     "metadata" = {
-      "name" = "rdma-0"
+      "name" = "rdma-${count.index}"
     }
     "spec" = {
       "deviceMode" = "RDMA"
       "vpc"        = "${var.rdma_network_prefix}-net"
-      "vpcSubnet"  = "${var.rdma_network_prefix}-sub-0"
+      "vpcSubnet"  = "${var.rdma_network_prefix}-sub-${count.index}"
     }
   }
 }
 
-resource "kubernetes_manifest" "network_rdma_0" {
+resource "kubernetes_manifest" "network_rdma" {
+  count = 8
   manifest = {
     "apiVersion" = "networking.gke.io/v1"
     "kind"       = "Network"
     "metadata" = {
-      "name" = "rdma-0"
+      "name" = "rdma-${count.index}"
     }
     "spec" = {
       "parametersRef" = {
         "group" = "networking.gke.io"
         "kind"  = "GKENetworkParamSet"
-        "name"  = "rdma-0"
+        "name"  = "rdma-${count.index}"
       }
       "type" = "Device"
     }
   }
-}
-
-resource "kubernetes_manifest" "gkenetworkparamset_rdma_1" {
-  manifest = {
-    "apiVersion" = "networking.gke.io/v1"
-    "kind"       = "GKENetworkParamSet"
-    "metadata" = {
-      "name" = "rdma-1"
-    }
-    "spec" = {
-      "deviceMode" = "RDMA"
-      "vpc"        = "${var.rdma_network_prefix}-net"
-      "vpcSubnet"  = "${var.rdma_network_prefix}-sub-1"
-    }
-  }
-}
-
-resource "kubernetes_manifest" "network_rdma_1" {
-  manifest = {
-    "apiVersion" = "networking.gke.io/v1"
-    "kind"       = "Network"
-    "metadata" = {
-      "name" = "rdma-1"
-    }
-    "spec" = {
-      "parametersRef" = {
-        "group" = "networking.gke.io"
-        "kind"  = "GKENetworkParamSet"
-        "name"  = "rdma-1"
-      }
-      "type" = "Device"
-    }
-  }
-}
-
-resource "kubernetes_manifest" "gkenetworkparamset_rdma_2" {
-  manifest = {
-    "apiVersion" = "networking.gke.io/v1"
-    "kind"       = "GKENetworkParamSet"
-    "metadata" = {
-      "name" = "rdma-2"
-    }
-    "spec" = {
-      "deviceMode" = "RDMA"
-      "vpc"        = "${var.rdma_network_prefix}-net"
-      "vpcSubnet"  = "${var.rdma_network_prefix}-sub-2"
-    }
-  }
-}
-
-resource "kubernetes_manifest" "network_rdma_2" {
-  manifest = {
-    "apiVersion" = "networking.gke.io/v1"
-    "kind"       = "Network"
-    "metadata" = {
-      "name" = "rdma-2"
-    }
-    "spec" = {
-      "parametersRef" = {
-        "group" = "networking.gke.io"
-        "kind"  = "GKENetworkParamSet"
-        "name"  = "rdma-2"
-      }
-      "type" = "Device"
-    }
-  }
-}
-
-resource "kubernetes_manifest" "gkenetworkparamset_rdma_3" {
-  manifest = {
-    "apiVersion" = "networking.gke.io/v1"
-    "kind"       = "GKENetworkParamSet"
-    "metadata" = {
-      "name" = "rdma-3"
-    }
-    "spec" = {
-      "deviceMode" = "RDMA"
-      "vpc"        = "${var.rdma_network_prefix}-net"
-      "vpcSubnet"  = "${var.rdma_network_prefix}-sub-3"
-    }
-  }
-}
-
-resource "kubernetes_manifest" "network_rdma_3" {
-  manifest = {
-    "apiVersion" = "networking.gke.io/v1"
-    "kind"       = "Network"
-    "metadata" = {
-      "name" = "rdma-3"
-    }
-    "spec" = {
-      "parametersRef" = {
-        "group" = "networking.gke.io"
-        "kind"  = "GKENetworkParamSet"
-        "name"  = "rdma-3"
-      }
-      "type" = "Device"
-    }
-  }
-}
-
-resource "kubernetes_manifest" "gkenetworkparamset_rdma_4" {
-  manifest = {
-    "apiVersion" = "networking.gke.io/v1"
-    "kind"       = "GKENetworkParamSet"
-    "metadata" = {
-      "name" = "rdma-4"
-    }
-    "spec" = {
-      "deviceMode" = "RDMA"
-      "vpc"        = "${var.rdma_network_prefix}-net"
-      "vpcSubnet"  = "${var.rdma_network_prefix}-sub-4"
-    }
-  }
-}
-
-resource "kubernetes_manifest" "network_rdma_4" {
-  manifest = {
-    "apiVersion" = "networking.gke.io/v1"
-    "kind"       = "Network"
-    "metadata" = {
-      "name" = "rdma-4"
-    }
-    "spec" = {
-      "parametersRef" = {
-        "group" = "networking.gke.io"
-        "kind"  = "GKENetworkParamSet"
-        "name"  = "rdma-4"
-      }
-      "type" = "Device"
-    }
-  }
-}
-
-resource "kubernetes_manifest" "gkenetworkparamset_rdma_5" {
-  manifest = {
-    "apiVersion" = "networking.gke.io/v1"
-    "kind"       = "GKENetworkParamSet"
-    "metadata" = {
-      "name" = "rdma-5"
-    }
-    "spec" = {
-      "deviceMode" = "RDMA"
-      "vpc"        = "${var.rdma_network_prefix}-net"
-      "vpcSubnet"  = "${var.rdma_network_prefix}-sub-5"
-    }
-  }
-}
-
-resource "kubernetes_manifest" "network_rdma_5" {
-  manifest = {
-    "apiVersion" = "networking.gke.io/v1"
-    "kind"       = "Network"
-    "metadata" = {
-      "name" = "rdma-5"
-    }
-    "spec" = {
-      "parametersRef" = {
-        "group" = "networking.gke.io"
-        "kind"  = "GKENetworkParamSet"
-        "name"  = "rdma-5"
-      }
-      "type" = "Device"
-    }
-  }
-}
-
-resource "kubernetes_manifest" "gkenetworkparamset_rdma_6" {
-  manifest = {
-    "apiVersion" = "networking.gke.io/v1"
-    "kind"       = "GKENetworkParamSet"
-    "metadata" = {
-      "name" = "rdma-6"
-    }
-    "spec" = {
-      "deviceMode" = "RDMA"
-      "vpc"        = "${var.rdma_network_prefix}-net"
-      "vpcSubnet"  = "${var.rdma_network_prefix}-sub-6"
-    }
-  }
-}
-
-resource "kubernetes_manifest" "network_rdma_6" {
-  manifest = {
-    "apiVersion" = "networking.gke.io/v1"
-    "kind"       = "Network"
-    "metadata" = {
-      "name" = "rdma-6"
-    }
-    "spec" = {
-      "parametersRef" = {
-        "group" = "networking.gke.io"
-        "kind"  = "GKENetworkParamSet"
-        "name"  = "rdma-6"
-      }
-      "type" = "Device"
-    }
-  }
-}
-
-resource "kubernetes_manifest" "gkenetworkparamset_rdma_7" {
-  manifest = {
-    "apiVersion" = "networking.gke.io/v1"
-    "kind"       = "GKENetworkParamSet"
-    "metadata" = {
-      "name" = "rdma-7"
-    }
-    "spec" = {
-      "deviceMode" = "RDMA"
-      "vpc"        = "${var.rdma_network_prefix}-net"
-      "vpcSubnet"  = "${var.rdma_network_prefix}-sub-7"
-    }
-  }
-}
-
-resource "kubernetes_manifest" "network_rdma_7" {
-  manifest = {
-    "apiVersion" = "networking.gke.io/v1"
-    "kind"       = "Network"
-    "metadata" = {
-      "name" = "rdma-7"
-    }
-    "spec" = {
-      "parametersRef" = {
-        "group" = "networking.gke.io"
-        "kind"  = "GKENetworkParamSet"
-        "name"  = "rdma-7"
-      }
-      "type" = "Device"
-    }
-  }
+  depends_on = [kubernetes_manifest.gkenetworkparamset_rdma]
 }
