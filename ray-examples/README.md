@@ -3,6 +3,8 @@
 This document provides instructions on how to deploy a Ray cluster on GKE using
 A3 Ultra VMs and run example jobs.
 
+For running a stand-alone job, check out the [`RayJob` example](job/README.md).
+
 ## 1. Requirements
 
 To set up the required Python environment using Conda, run the following
@@ -35,7 +37,7 @@ With the port-forward active, you can view the Ray Dashboard in your browser at:
 Use the `ray job submit` command to run the training script. The example below
 uses `convnext_train.py`.
 
-```
+```sh
 ray job submit \
   --address http://localhost:8265 \
   --runtime-env train/runtime-env.yaml \
