@@ -33,6 +33,28 @@ resource "google_compute_subnetwork" "management" {
   private_ip_google_access = true
 }
 
+# As the GKE nodes are private they need a NAT+Router in order
+# to access external resources such as Pypi
+resource "google_compute_router" "management_router" {
+  name        = "${var.management_network_prefix}-router"
+  network     = google_compute_network.management.name
+  description = "Supports ${var.management_network_prefix}-nat for egress"
+  region      = google_compute_subnetwork.management.region
+}
+
+resource "google_compute_router_nat" "management_nat" {
+  name                               = "${var.management_network_prefix}-nat"
+  router                             = google_compute_router.management_router.name
+  region                             = google_compute_router.management_router.region
+  nat_ip_allocate_option             = "AUTO_ONLY"
+  source_subnetwork_ip_ranges_to_nat = "ALL_SUBNETWORKS_ALL_IP_RANGES"
+
+  log_config {
+    enable = true
+    filter = "ERRORS_ONLY"
+  }
+}
+
 # --------------------------------------------------------------------
 # Proxy-only subnetwork for internal load balancers
 # --------------------------------------------------------------------
@@ -78,6 +100,28 @@ resource "google_compute_firewall" "gvnics_internal" {
     protocol = "all"
   }
   source_ranges = [var.firewall_source_range]
+}
+
+# As the GKE nodes are private they need a NAT+Router in order
+# to access external resources such as Pypi
+resource "google_compute_router" "gvnics_router" {
+  name        = "${var.gvnic_network_prefix}-router"
+  network     = google_compute_network.gvnics.name
+  description = "Supports ${var.gvnic_network_prefix}-nat for egress"
+  region      = google_compute_subnetwork.gvnics.region
+}
+
+resource "google_compute_router_nat" "gvnics_nat" {
+  name                               = "${var.gvnic_network_prefix}-nat"
+  router                             = google_compute_router.gvnics_router.name
+  region                             = google_compute_router.gvnics_router.region
+  nat_ip_allocate_option             = "AUTO_ONLY"
+  source_subnetwork_ip_ranges_to_nat = "ALL_SUBNETWORKS_ALL_IP_RANGES"
+
+  log_config {
+    enable = true
+    filter = "ERRORS_ONLY"
+  }
 }
 
 # ----------------------------------
