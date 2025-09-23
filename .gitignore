@@ -5,3 +5,5 @@ terraform.tfstate
 .terraform.tfstate.lock.info
 infra/ray/base.tfvars
 infra/ray/terraform.tfvars
+
+ray-examples/job/ray-job-w-cluster-ccc.yaml

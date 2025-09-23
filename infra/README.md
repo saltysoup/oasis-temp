@@ -9,7 +9,7 @@ The Proof of Concept (POC) will create the following infrastructure components:
   - 1 x RDMA VPC
   - 2 x Standard VPC (for north-south traffic)
 - **Kubernetes (GKE):**
-  - GKE cluster with multi-networking enabled.
+  - GKE private cluster with multi-networking enabled.
   - GCS Fuse addon for GKE.
   - GKE network objects specifically for RDMA NICs.
   - NCCL RDMA binaries for GPU communication.
