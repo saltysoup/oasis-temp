@@ -17,27 +17,26 @@ kind: RayJob
 metadata:
   name: rayjob-nccl
 spec:
-  # enableInTreeAutoscaling: true
-  # autoscalerOptions:
-  #   idleTimeoutSeconds: 3600 # warm period
+  entrypoint: python /home/ray/jobs/job.py
+
   shutdownAfterJobFinishes: true
-  ttlSecondsAfterFinished: 3600
-  entrypoint: python test_nccl_rdma_multi.py
+  ttlSecondsAfterFinished: 10
+
   runtimeEnvYAML: |
     pip:
       - torch==2.7.1
-    working_dir: "nccl"
+      - requests==2.26.0
+      - pendulum==2.1.2
+
     env_vars:
       NCCL_DEBUG: "INFO"
       NCCL_DEBUG_SUBSYS: "INIT,NET"
   rayClusterSpec:
-    # enableInTreeAutoscaling: true
-    #autoscalerOptions:
-    #  idleTimeoutSeconds: 7200 # warm period before node is shut down
-    rayVersion: '2.44.1'
+    rayVersion: '2.48.0'
+
     headGroupSpec:
       rayStartParams:
-        dashboard-host: '0.0.0.0'
+        dashboard-host: "0.0.0.0"
       template:
         metadata:
           annotations:
@@ -46,7 +45,6 @@ spec:
             gke-gcsfuse/memory-limit: "0"
             gke-gcsfuse/ephemeral-storage-limit: "0"
         spec:
-          restartPolicy: Never
           serviceAccountName: ${SERVICE_ACCOUNT}
           nodeSelector:
             cloud.google.com/gke-nodepool: "default-pool"
@@ -73,11 +71,20 @@ spec:
                 memory: "16G"
                 ephemeral-storage: "9Gi"
             volumeMounts:
+              - name: codebase
+                mountPath: /home/ray/jobs
+
               - name: ray-logs
                 mountPath: /tmp/ray
               - name: gcs-fuse-csi-eph
                 mountPath: /bucket
           volumes:
+            - name: codebase
+              configMap:
+                name: codebase
+                items:
+                - key: job.py
+                  path: job.py
             - name: ray-logs
               emptyDir: {}
             - name: gcs-fuse-csi-eph
@@ -89,7 +96,7 @@ spec:
                   mountOptions: "implicit-dirs,file-mode=777,dir-mode=777,file-cache:enable-parallel-downloads:true,file-cache:cache-file-for-range-read:true,file-cache:max-size-mb:-1,write:enable-streaming-writes:true,read_ahead_kb=1024,file-system:kernel-list-cache-ttl-secs:-1"
     workerGroupSpecs:
     - replicas: 2
-      minReplicas: 0
+      minReplicas: 2
       maxReplicas: 10
       groupName: gpu-group
       rayStartParams:
@@ -182,3 +189,39 @@ spec:
                 bucketName: ${BUCKET_NAME}
                 gcsfuseMetadataPrefetchOnMount: "true"
                 mountOptions: "implicit-dirs,file-mode=777,dir-mode=777,file-cache:enable-parallel-downloads:true,file-cache:cache-file-for-range-read:true,file-cache:max-size-mb:-1,write:enable-streaming-writes:true,read_ahead_kb=1024,file-system:kernel-list-cache-ttl-secs:-1"
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: codebase
+data:
+  job.py: |
+    import ray
+    import os
+    import requests
+
+    ray.init()
+
+    @ray.remote
+    class Counter:
+        def __init__(self):
+            # Used to verify runtimeEnv
+            self.name = "albert"
+            assert self.name == "test_counter"
+            self.counter = 0
+
+        def inc(self):
+            self.counter += 1
+
+        def get_counter(self):
+            return "{} got {}".format(self.name, self.counter)
+
+    counter = Counter.remote()
+
+    for _ in range(5):
+        ray.get(counter.inc.remote())
+        print(ray.get(counter.get_counter.remote()))
+
+    # Verify that the correct runtime env was used for the job.
+    assert requests.__version__ == "2.48.0"

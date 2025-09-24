@@ -14,6 +14,9 @@
  limitations under the License.
  */
 
+output "project_id" {
+  value = data.google_project.project.project_id
+}
 
 output "region" {
   value = var.region
@@ -41,6 +44,14 @@ output "gke_connection" {
 
 output "artifact_registry" {
   value = google_artifact_registry_repository.oasis.registry_uri
+}
+
+output "artifact_registry_virtual" {
+  value = google_artifact_registry_repository.oasis-virtual.registry_uri
+}
+
+output "artifact_registry_python_virtual" {
+  value = google_artifact_registry_repository.oasis-python-virtual.registry_uri
 }
 
 output "builder_service_account" {

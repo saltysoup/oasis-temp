@@ -24,7 +24,7 @@ resource "kubernetes_manifest" "ray_cluster" {
     }
     "spec" = {
       "autoscalerOptions" = {
-        "idleTimeoutSeconds" = 7200
+        "idleTimeoutSeconds" = var.ray_cluster_idle_timeout_seconds
       }
       "enableInTreeAutoscaling" = true
       "headGroupSpec" = {
@@ -49,7 +49,7 @@ resource "kubernetes_manifest" "ray_cluster" {
                     "value" = "1"
                   },
                 ]
-                "image" = "${var.artifact_registry}/ray-cluster"
+                "image" = "${local.ray_server_image}"
                 "name"  = "ray-head"
                 "ports" = [
                   {
@@ -114,16 +114,17 @@ resource "kubernetes_manifest" "ray_cluster" {
           }
         }
       }
-      "rayVersion" = "2.48.0"
+      "rayVersion" = var.ray_version
       "workerGroupSpecs" = [
         {
           "groupName"   = "gpu-group"
+          "replicas"    = 0
           "maxReplicas" = 10
-          "minReplicas" = 2
+          "minReplicas" = 0
           "rayStartParams" = {
             "num-cpus" = "220"
           }
-          "replicas" = 2
+
           "template" = {
             "metadata" = {
               "annotations" = {
@@ -161,7 +162,7 @@ resource "kubernetes_manifest" "ray_cluster" {
                       "value" = "/usr/local/nvidia/lib64"
                     },
                   ]
-                  "image" = "${var.artifact_registry}/ray-cluster"
+                  "image" = "${local.ray_server_image}"
                   "name"  = "ray-worker"
                   "resources" = {
                     "limits" = {

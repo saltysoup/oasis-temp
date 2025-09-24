@@ -1,4 +1,49 @@
-# Example Ray job
+# Example stand-alone Ray jobs
+
+## Sample job
+
+Run the sample jobs provided in
+[RayJob Quickstart](https://docs.ray.io/en/latest/cluster/kubernetes/getting-started/rayjob-quick-start.html)
+
+```sh
+kubectl apply -f https://raw.githubusercontent.com/ray-project/kuberay/v1.4.2/ray-operator/config/samples/ray-job.sample.yaml
+
+kubectl apply -f https://raw.githubusercontent.com/ray-project/kuberay/v1.4.2/ray-operator/config/samples/ray-job.shutdown.yaml
+```
+
+Check the logs:
+
+```sh
+kubectl logs -l=job-name=rayjob-sample
+kubectl logs -l=job-name=rayjob-sample-shutdown
+```
+
+Clean up:
+
+```sh
+kubectl delete -f https://raw.githubusercontent.com/ray-project/kuberay/v1.4.2/ray-operator/config/samples/ray-job.sample.yaml
+
+kubectl delete -f https://raw.githubusercontent.com/ray-project/kuberay/v1.4.2/ray-operator/config/samples/ray-job.shutdown.yaml
+```
+
+## Run a job using the custom image
+
+The basic job is just the shutdown example provided in
+[RayJob Quickstart](https://docs.ray.io/en/latest/cluster/kubernetes/getting-started/rayjob-quick-start.html)
+(See: "Create a RayJob with shutdownAfterJobFinishes set to true"). The
+difference is that it runs on the custom Ray Server image we built earlier.
+
+```sh
+./run-basic-job.sh
+```
+
+Check the logs with:
+
+```sh
+kubectl logs --follow jobs/rayjob-sample-shutdown-custom
+```
+
+## Running the NCCL Benchmark
 
 This example deploys a Ray job rather than a cluster. The example makes use of
 the Ray plugin for `kubectl`.
@@ -57,5 +102,5 @@ kubectl logs -l=job-name=rayjob-nccl
 You can stop the job with:
 
 ```sh
-kubectl delete rayjobs.ray.io rayjob-nccl
+kubectl delete -f ray-job-w-cluster-ccc.yaml
 ```

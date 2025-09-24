@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM us-south1-docker.pkg.dev/oasis-472401/oasis-virtual/rayproject/ray:2.48.0.2c63f6-py312-cu128
+FROM ${registry}/rayproject/ray:2.48.0.2c63f6-py312-cu128
 
 # additional binaries for rdma
 RUN sudo apt update -y \
@@ -27,4 +27,4 @@ RUN pip install --no-cache-dir keyring \
     && pip install --no-cache-dir keyrings.google-artifactregistry-auth
 
 COPY requirements.txt requirements.txt
-RUN pip install --no-cache-dir --index-url https://us-south1-python.pkg.dev/oasis-472401/oasis-python-virtual/simple/ -r requirements.txt
+RUN pip install --no-cache-dir --index-url https://${registry_python}/simple/ -r requirements.txt

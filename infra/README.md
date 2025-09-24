@@ -24,28 +24,47 @@ The Proof of Concept (POC) will create the following infrastructure components:
 
 ### 1. Base Infrastructure Provisioning
 
-Navigate to the Terraform directory:
+The Terraform manifests will deploy the following cloud resources:
+
+- `services.tf`: Configures the required Google Cloud APIs
+- `gcs.tf`: GCS bucket for training data.
+- `gke.tf`: GKE Standard cluster with RDMA networking, DWS Flex, and Spot
+  `a3-ultragpu-8g` (H200) nodepools.
+- `iam.tf`: IAM policies to grant the Kubernetes service account read-write
+  access to the training data bucket and read-access to GCP Secrets.
+- `network.tf`: 3 x VPCs, subnets, and firewall rules for gVNICs and RDMA.
+- `registry.tf`: Creates local, remote and virtual repositories for Docker
+  images and Python
+- `build.tf`: Create a Cloud Build worker pool that lets you run builds in your
+  network and configures the use of larger build VMs to help with the image
+  sizes.
+
+As usual, the `variables.tf` file lists all of the configuration variables you
+can set - helpful defaults have been set for you. You can use `terraform.tfvars`
+to override the variable defaults.
+
+To start the deployment, navigate to the `infra/base` directory:
 
 ```bash
 cd infra/base
 ```
 
-Log in with your
-[ADC](https://cloud.google.com/docs/authentication/provide-credentials-adc):
+Log in with your Application Default Credentials
+([ADC](https://cloud.google.com/docs/authentication/provide-credentials-adc)):
 
 ```sh
 gcloud auth application-default login
 ```
 
-Set your active GCP project:
+Set your active GCP project to the one you want to deploy to:
 
 ```sh
 gcloud config set project <YOUR_PROJECT_ID>
 export GCLOUD_PROJECT=$(gcloud config get project)
 ```
 
-(See
-[Provider Default Values Configuration](https://registry.terraform.io/providers/hashicorp/google/latest/docs/guides/provider_reference#provider-default-values-configuration))
+_(See
+[Provider Default Values Configuration](https://registry.terraform.io/providers/hashicorp/google/latest/docs/guides/provider_reference#provider-default-values-configuration))_
 
 The GKE cluster is private so your IP is added to the list of authorized
 networks to allow for control plane access. The command below may not work
@@ -63,23 +82,16 @@ terraform init
 terraform plan
 ```
 
-The `terraform apply` command will deploy the following cloud resources:
-
-- `services.tf`: Configures the required Google Cloud APIs
-- `gcs.tf`: GCS bucket for training data.
-- `gke.tf`: GKE Standard cluster with RDMA networking, DWS Flex, and Spot
-  `a3-ultragpu-8g` (H200) nodepools.
-- `iam.tf`: IAM policies to grant the Kubernetes service account read-write
-  access to the training data bucket and read-access to GCP Secrets.
-- `network.tf`: 3 x VPCs, subnets, and firewall rules for gVNICs and RDMA.
-
-_You can use `terraform.tfvars` to override the variable defaults._
-
-If you're happy with the plan, `apply` it:
+It's important to review the plan output. If you're happy with the plan, `apply`
+it:
 
 ```sh
 terraform apply
 ```
+
+Note: In the output you'll see an entry for `gke connection` - the value
+provides the command for getting the authentication details for the cluster.
+**Copy the command and run it before moving to the next step.**
 
 We'll use the outputs in the deployment of the Ray cluster:
 
@@ -87,21 +99,28 @@ We'll use the outputs in the deployment of the Ray cluster:
 terraform output >../ray/terraform.tfvars
 ```
 
-Note: In the output you'll see an entry for `gke connection` - the value
-provides the command for getting the authentication details for the cluster.
-**Copy the command and run it before moving to the next step.**
-
 ### 2. Build a custom Ray image
 
 This next step runs a script that will build the Ray server image using Cloud
 Build and deploy it to Artifact Registry.
 
+Notes:
+
+- Run `gcloud config set builds/use_kaniko True` to help speed up your builds.
+  This will cause the first build to be slower but helps speed up subsequent
+  builds.
+  - You can also set `builds/kaniko_cache_ttl` to increase the cache TTL. For
+    example, `gcloud config set builds/kaniko_cache_ttl 24` will cache builds
+    for 24 hours (the default is 6).
+  - If you choose not to use Cloud Build private worker pools you'll likely find
+    that the caching process exceeds system resources and causes the build to
+    fail. To counter this you'll likely need to disable the Kaniko cache
+- The build can take some time (10-20 minutes) so grab a beverage.
+
 ```sh
 cd ..
 ./build.sh
 ```
-
-_The build can take some time so grab a beverage._
 
 ### 3. Ray cluster
 
@@ -164,11 +183,12 @@ cd ray
 terraform destroy
 ```
 
+Note: You may have to run `destroy` more than once as some networking components
+take a while to be destroyed.
+
 To destroy the base infrastructure:
 
 ```sh
 cd ../base
 terraform destroy
 ```
-
-Note: You may have to run `destroy` more than once.

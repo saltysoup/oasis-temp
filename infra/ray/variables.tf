@@ -44,6 +44,18 @@ variable "artifact_registry" {
   description = "The name of the Artifact Registry repository."
 }
 
+variable "ray_server_image_name" {
+  type        = string
+  description = "The name of the Ray server image."
+  default     = "ray-cluster"
+}
+
+variable "ray_server_image_version" {
+  type        = string
+  description = "The version of the Ray server image."
+  default     = "latest"
+}
+
 variable "gvnic_network_prefix" {
   type        = string
   description = "The prefix for the primary GVNIC data VPC and subnet names."
@@ -62,6 +74,18 @@ variable "secret_name" {
   default     = "oasis-secrets"
 }
 
+variable "ray_cluster_idle_timeout_seconds" {
+  type        = number
+  description = "The duration, in seconds, that a worker node or pod can remain idle before it is scaled down or terminated by the autoscaler"
+  default     = 1800
+}
+
+variable "ray_version" {
+  type        = string
+  description = ""
+  default     = "2.48.0"
+}
+
 data "google_client_config" "current" {}
 
 data "google_project" "project" {}
@@ -69,4 +93,6 @@ data "google_project" "project" {}
 locals {
   project_id     = data.google_client_config.current.project
   project_number = data.google_project.project.number
+
+  ray_server_image = "${var.artifact_registry}/${var.ray_server_image_name}${var.ray_server_image_version}"
 }

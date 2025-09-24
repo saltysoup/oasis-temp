@@ -34,13 +34,6 @@ locals {
   )
 }
 
-resource "google_artifact_registry_repository" "oasis" {
-  location      = var.region
-  repository_id = "oasis"
-  description   = "Oasis docker repository"
-  format        = "DOCKER"
-}
-
 resource "google_container_cluster" "primary" {
   name     = var.cluster_name
   location = var.region

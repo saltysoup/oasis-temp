@@ -43,6 +43,8 @@ resource "google_project_iam_member" "builder_service_account_roles" {
     "roles/artifactregistry.writer",
     "roles/storage.objectAdmin",
     "roles/storage.admin",
+    "roles/containeranalysis.notes.editor",
+    "roles/containeranalysis.occurrences.editor",
   ])
   role   = each.key
   member = "serviceAccount:${google_service_account.builder.email}"
