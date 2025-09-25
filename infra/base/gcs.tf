@@ -21,4 +21,8 @@ resource "google_storage_bucket" "default" {
   force_destroy = false # protection against deletions
 
   uniform_bucket_level_access = true
+  public_access_prevention    = "enforced"
+  lifecycle {
+    prevent_destroy = true
+  }
 }
