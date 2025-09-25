@@ -14,39 +14,43 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-pushd base
+pushd ../../base
 project_id=$(terraform output -json | jq -r '.project_id.value')
 repo=$(terraform output -json | jq -r '.artifact_registry.value')
 builder=$(terraform output -json | jq -r '.builder_service_account.value')
 region=$(terraform output -json | jq -r '.region.value')
 export registry=$(terraform output -json | jq -r '.artifact_registry_virtual.value')
-export registry_python=$(terraform output -json | jq -r '.artifact_registry_python_virtual.value')
 popd
 
-rm -f build_output.json
+if [ "$1" == "--no-build" ];then
+    echo "No build will be performed - I'll just use any existing results."
+    result=0
+else
+    rm -f build_output.json
 
-cat image/Dockerfile.tmpl | envsubst > image/Dockerfile
+    cat Dockerfile.tmpl | envsubst > Dockerfile
 
-# This captures any error from the `gcloud` call and avoids
-# us seeing `$?` as the result of `tee`
-set -o pipefail
+    # This captures any error from the `gcloud` call and avoids
+    # us seeing `$?` as the result of `tee`
+    set -o pipefail
 
-# Use Cloud Build to build the Ray cluster container image
-gcloud builds submit image \
-  --config="image/cloudbuild.yaml" \
-  --substitutions=_REPO="${repo}" \
-  --region="${region}" \
-  --timeout="1h" \
-  --service-account="${builder}" \
-  --worker-pool="projects/${project_id}/locations/${region}/workerPools/oasis-build-pool" \
-  --suppress-logs \
-  --format=json | tee build_output.json
+    # Use Cloud Build to build the Ray cluster container image
+    gcloud builds submit . \
+    --config="cloudbuild.yaml" \
+    --substitutions=_REPO="${repo}" \
+    --region="${region}" \
+    --timeout="1h" \
+    --service-account="${builder}" \
+    --worker-pool="projects/${project_id}/locations/${region}/workerPools/oasis-build-pool" \
+    --suppress-logs \
+    --format=json | tee build_output.json
 
-result=$?
+    result=$?
+fi
 
 if [ -e "build_output.json" ]; then
     build_id=$(jq -r '.id' build_output.json)
-    image_sha256=$(jq -r '.results.buildStepImages[0]' build_output.json)
+    image_digest=$(jq -r '.results.images[0].digest' build_output.json)
 fi
 
 if [ $result -ne 0 ]; then
@@ -60,11 +64,12 @@ if [ $result -ne 0 ]; then
   exit 1
 fi
 
-if [ -z "$image_sha256" ]; then
+if [ -z "$image_digest" ]; then
     echo "Build succeeded: but I can't determine the SHA256 value so I can't update the Ray Service image version - sorry"
     exit 1
 fi
 
-echo "Build succeeded: Image version is $image_sha256"
-echo "ray_server_image_name = \"ray-cluster@\"" > ray/image.auto.tfvars
-echo "ray_server_image_version = \"$image_sha256\"" >> ray/image.auto.tfvars
+base_image="$(jq -r '.images[0]' build_output.json)@${image_digest}"
+echo "Build succeeded: Image is $base_image"
+echo "To generate an SBOM, run the following command once vulnerability scanning has completed: gcloud artifacts sbom export --uri=${base_image}"
+echo "export base_image=${base_image}" > ../custom/base_vars.env

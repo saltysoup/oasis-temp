@@ -9,7 +9,9 @@ infra/ray/terraform.tfvars
 ray-examples/job/ray-job-w-cluster-ccc.yaml
 ray-examples/job/shutdown-job.yaml
 
-infra/image/Dockerfile
-infra/build_output.json
+infra/images/**/Dockerfile
+infra/images/**/build_output.json
 infra/ray/image.tfvars
 infra/ray/image.auto.tfvars
+infra/images/custom/base_vars
+infra/images/custom/base_vars.env

@@ -23,8 +23,11 @@ resource "google_project_service" "services" {
     "artifactregistry.googleapis.com",
     "containeranalysis.googleapis.com",
     "containerscanning.googleapis.com",
+    "ondemandscanning.googleapis.com",
     "cloudbuild.googleapis.com",
     "servicenetworking.googleapis.com",
+    "binaryauthorization.googleapis.com",
+    "containersecurity.googleapis.com",
   ])
   service = each.key
 

@@ -1,0 +1,24 @@
+steps:
+- name: 'gcr.io/cloud-builders/docker'
+  args:
+  - 'build'
+  - '--network=cloudbuild'
+  - '-t'
+  - '${_REPO}/ray-server'
+  - '.'
+
+- name: 'gcr.io/cloud-builders/docker'
+  args:
+  - 'push'
+  - '${_REPO}/ray-server'
+
+options:
+  logging: GCS_ONLY
+  defaultLogsBucketBehavior: REGIONAL_USER_OWNED_BUCKET
+  requestedVerifyOption: VERIFIED
+
+substitutions:
+  _REPO: $LOCATION-docker.pkg.dev/$PROJECT_ID/oasis
+
+
+images: ['${_REPO}/ray-server']

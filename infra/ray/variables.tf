@@ -39,21 +39,10 @@ variable "gke_cluster_name" {
   default     = "oasis-h200-dws-tf"
 }
 
-variable "artifact_registry" {
+variable "ray_server_image" {
   type        = string
-  description = "The name of the Artifact Registry repository."
-}
+  description = "The full URL of the Ray server image."
 
-variable "ray_server_image_name" {
-  type        = string
-  description = "The name of the Ray server image."
-  default     = "ray-cluster"
-}
-
-variable "ray_server_image_version" {
-  type        = string
-  description = "The version of the Ray server image."
-  default     = "latest"
 }
 
 variable "gvnic_network_prefix" {
@@ -93,6 +82,4 @@ data "google_project" "project" {}
 locals {
   project_id     = data.google_client_config.current.project
   project_number = data.google_project.project.number
-
-  ray_server_image = "${var.artifact_registry}/${var.ray_server_image_name}${var.ray_server_image_version}"
 }

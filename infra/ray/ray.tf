@@ -49,7 +49,7 @@ resource "kubernetes_manifest" "ray_cluster" {
                     "value" = "1"
                   },
                 ]
-                "image" = "${local.ray_server_image}"
+                "image" = "${var.ray_server_image}"
                 "name"  = "ray-head"
                 "ports" = [
                   {
@@ -162,7 +162,7 @@ resource "kubernetes_manifest" "ray_cluster" {
                       "value" = "/usr/local/nvidia/lib64"
                     },
                   ]
-                  "image" = "${local.ray_server_image}"
+                  "image" = "${var.ray_server_image}"
                   "name"  = "ray-worker"
                   "resources" = {
                     "limits" = {

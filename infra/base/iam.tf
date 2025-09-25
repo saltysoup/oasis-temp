@@ -30,25 +30,7 @@ resource "google_project_iam_member" "gke_service_account_roles" {
   member = "serviceAccount:${google_service_account.default.email}"
 }
 
-resource "google_service_account" "builder" {
-  account_id   = var.builder_service_account_name
-  display_name = "Service Account for building container images"
-}
 
-resource "google_project_iam_member" "builder_service_account_roles" {
-  project = local.project_id
-  for_each = toset([
-    "roles/logging.logWriter",
-    "roles/monitoring.metricWriter",
-    "roles/artifactregistry.writer",
-    "roles/storage.objectAdmin",
-    "roles/storage.admin",
-    "roles/containeranalysis.notes.editor",
-    "roles/containeranalysis.occurrences.editor",
-  ])
-  role   = each.key
-  member = "serviceAccount:${google_service_account.builder.email}"
-}
 
 resource "google_project_iam_member" "gke_service_agent_network_user" {
   project    = local.project_id

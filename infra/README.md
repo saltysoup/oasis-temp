@@ -99,27 +99,30 @@ We'll use the outputs in the deployment of the Ray cluster:
 terraform output >../ray/terraform.tfvars
 ```
 
-### 2. Build a custom Ray image
+### 2. Build a Ray images
 
-This next step runs a script that will build the Ray server image using Cloud
+This next step runs a script that will build the Ray server images using Cloud
 Build and deploy it to Artifact Registry.
 
-Notes:
+Note: the builds can each take some time (5-20 minutes).
 
-- Run `gcloud config set builds/use_kaniko True` to help speed up your builds.
-  This will cause the first build to be slower but helps speed up subsequent
-  builds.
-  - You can also set `builds/kaniko_cache_ttl` to increase the cache TTL. For
-    example, `gcloud config set builds/kaniko_cache_ttl 24` will cache builds
-    for 24 hours (the default is 6).
-  - If you choose not to use Cloud Build private worker pools you'll likely find
-    that the caching process exceeds system resources and causes the build to
-    fail. To counter this you'll likely need to disable the Kaniko cache
-- The build can take some time (10-20 minutes) so grab a beverage.
+The base image (`ray-base`) uses an image from the
+[Ray Project's Docker Hub images](https://hub.docker.com/r/rayproject/ray) and
+updates the operating system. The `keyrings.google-artifactregistry-auth` Python
+package is also installed so that downstream images can access the Python
+repository provided in Artifact Registry (`oasis-python-virtual`).
 
 ```sh
-cd ..
-./build.sh
+cd ../images/base
+./build_base_image.sh
+```
+
+A custom image named `ray-server` is built from `ray-base`. This is an example
+image that installs Python packages that can be used by Ray jobs.
+
+```sh
+cd ../images/custom
+./build_custom_image.sh
 ```
 
 ### 3. Ray cluster
@@ -127,7 +130,7 @@ cd ..
 Switch into the `ray` directory:
 
 ```sh
-cd ray
+cd ../../ray
 ```
 
 The Terraform configuration variables should appear in the `terraform.tfvars`
@@ -157,7 +160,7 @@ The `terraform apply` command will deploy the following cloud resources:
 If you're happy with the plan, `apply` it:
 
 ```sh
-terraform apply
+terraform apply -compact-warnings
 ```
 
 ## Explore the Ray Dashboard
@@ -170,6 +173,11 @@ kubectl port-forward svc/ray-dashboard-service  8265:8265 2>&1 >/dev/null &
 ```
 
 You should be able to access http://localhost:8265/ in your browser.
+
+## Try the Ray examples
+
+Head to the [ray-examples](../ray-examples/README.md) directory and try out the
+examples.
 
 ## Teardown
 

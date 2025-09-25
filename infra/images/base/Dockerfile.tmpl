@@ -25,6 +25,3 @@ RUN sudo apt update -y \
 # See: https://cloud.google.com/artifact-registry/docs/python/authentication
 RUN pip install --no-cache-dir keyring \
     && pip install --no-cache-dir keyrings.google-artifactregistry-auth
-
-COPY requirements.txt requirements.txt
-RUN pip install --no-cache-dir --index-url https://${registry_python}/simple/ -r requirements.txt

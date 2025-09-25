@@ -13,6 +13,28 @@
  See the License for the specific language governing permissions and
  limitations under the License.
  */
+
+resource "google_service_account" "builder" {
+  account_id   = var.builder_service_account_name
+  display_name = "Service Account for building container images"
+}
+
+resource "google_project_iam_member" "builder_service_account_roles" {
+  project = local.project_id
+  for_each = toset([
+    "roles/logging.logWriter",
+    "roles/monitoring.metricWriter",
+    "roles/artifactregistry.writer",
+    "roles/storage.objectAdmin",
+    "roles/storage.admin",
+    "roles/containeranalysis.notes.editor",
+    "roles/containeranalysis.occurrences.editor",
+    "roles/ondemandscanning.admin",
+  ])
+  role   = each.key
+  member = "serviceAccount:${google_service_account.builder.email}"
+}
+
 resource "google_compute_global_address" "build_worker_range" {
   name          = "worker-pool-range"
   purpose       = "VPC_PEERING"

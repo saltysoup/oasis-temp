@@ -3,7 +3,7 @@
 This document provides instructions on how to deploy a Ray cluster on GKE using
 A3 Ultra VMs and run example jobs.
 
-For running a stand-alone job, check out the [`RayJob` example](job/README.md).
+For running a stand-alone job, check out the [`RayJob` examples](job/README.md).
 
 ## 1. Requirements
 
