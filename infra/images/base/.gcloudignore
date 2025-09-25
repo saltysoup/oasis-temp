@@ -1,0 +1,4 @@
+Dockerfile.tmpl
+.gcloudignore
+build_base_image.sh
+build_output.json

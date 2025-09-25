@@ -1,0 +1,17 @@
+.terraform
+terraform.tfstate.backup
+terraform.tfstate
+.terraform.lock.hcl
+.terraform.tfstate.lock.info
+infra/ray/base.tfvars
+infra/ray/terraform.tfvars
+
+ray-examples/job/ray-job-w-cluster-ccc.yaml
+ray-examples/job/shutdown-job.yaml
+
+infra/images/**/Dockerfile
+infra/images/**/build_output.json
+infra/ray/image.tfvars
+infra/ray/image.auto.tfvars
+infra/images/custom/base_vars
+infra/images/custom/base_vars.env

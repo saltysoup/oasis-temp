@@ -47,19 +47,19 @@ def train_func_per_worker(config: Dict):
 
     local_rank = ray.train.get_context().get_local_rank()
     torch.cuda.set_device(local_rank)
-    
+
     world_rank = ray.train.get_context().get_world_rank()
     print(f"[Rank {world_rank}] Process started, assigned to physical GPU {torch.cuda.current_device()}.")
-    
+
     train_dataloader = get_dataloaders(batch_size_per_worker=batch_size_per_worker)
     train_dataloader = ray.train.torch.prepare_data_loader(train_dataloader)
-    
+
     model = models.convnext_base(weights=None, num_classes=1000)
     model = ray.train.torch.prepare_model(model)
 
     loss_fn = nn.CrossEntropyLoss()
     optimizer = torch.optim.SGD(model.parameters(), lr=lr, momentum=0.9, weight_decay=5e-4)
-    
+
     for epoch in range(epochs):
         model.train()
         for X, y in tqdm(train_dataloader, desc=f"Train Epoch {epoch} Rank {world_rank}"):
@@ -68,7 +68,7 @@ def train_func_per_worker(config: Dict):
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
-        
+
     print(f"[Rank {world_rank}] Training finished.")
 
 
@@ -77,7 +77,7 @@ def run_stress_test(num_nodes=2, gpus_per_node=8, cpus_per_node=220):
     """Configures and launches the Ray TorchTrainer job using a one-process-per-GPU model."""
     total_workers = num_nodes * gpus_per_node
     gpus_per_worker = 1
-    
+
     print(f"Total Workers (world_size): {total_workers}")
     print(f"GPUs per Worker:            {gpus_per_worker}")
     print("-------------------------------------------------------------")
@@ -93,7 +93,7 @@ def run_stress_test(num_nodes=2, gpus_per_node=8, cpus_per_node=220):
         use_gpu=True,
         resources_per_worker={"GPU": gpus_per_worker},
     )
-    
+
     torch_config = TorchConfig(backend="nccl")
 
     trainer = TorchTrainer(
@@ -102,7 +102,7 @@ def run_stress_test(num_nodes=2, gpus_per_node=8, cpus_per_node=220):
         scaling_config=scaling_config,
         torch_config=torch_config,
     )
-    
+
     result = trainer.fit()
     print("\n--- Training Run Complete ---")
     print(f"Result: {result}")

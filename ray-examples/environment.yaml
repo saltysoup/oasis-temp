@@ -5,5 +5,4 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - ray[default]
-
+  - ray-default

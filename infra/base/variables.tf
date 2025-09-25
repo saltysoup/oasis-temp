@@ -1,14 +1,18 @@
-variable "project_id" {
-  type        = string
-  description = "The Google Cloud project ID."
-  default     = "nm-ai-sandbox"
-}
+/*
+ Copyright 2025 Google LLC
 
-variable "project_number" {
-  type        = string
-  description = "The Google Cloud project number."
-  default     = "820082097244"
-}
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+      https://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+ */
 
 variable "region" {
   type        = string
@@ -20,6 +24,11 @@ variable "zone" {
   type        = string
   description = "The Google Cloud zone for resources."
   default     = "us-south1-b"
+}
+
+variable "client_ip" {
+  type        = string
+  description = "The IP address of your system. Used to access GKE control plane."
 }
 
 variable "management_network_prefix" {
@@ -46,7 +55,6 @@ variable "gvnic_cidr_range" {
   default     = "10.100.100.0/24"
 }
 
-# ADD THIS BLOCK
 variable "rdma_network_prefix" {
   type        = string
   description = "The prefix for the RDMA VPC and subnet names."
@@ -119,20 +127,37 @@ variable "gpu_driver_version" {
   default     = "LATEST"
 }
 
-variable "bucket_name" {
+variable "bucket_name_suffix" {
   type        = string
   description = "The name of the GCS bucket for training data."
   default     = "oasis-ray-tf"
 }
 
-variable "ksa_name" {
+variable "proxy_only_cidr_range" {
   type        = string
-  description = "The name of the Kubernetes Service Account for Workload Identity."
-  default     = "oasis-ray"
+  description = "The CIDR range for the proxy-only subnet."
+  default     = "10.129.0.0/26"
 }
 
-variable "secret_name" {
+variable "gke_service_account_name" {
   type        = string
-  description = "The name of the Secret Manager secret."
-  default     = "oasis-secrets"
+  description = "The name of the GKE service account."
+  default     = "oasis-cluster"
+}
+
+variable "builder_service_account_name" {
+  type        = string
+  description = "The name of the builder service account."
+  default     = "oasis-builder"
+}
+
+data "google_client_config" "current" {}
+
+data "google_project" "project" {}
+
+locals {
+  project_id     = data.google_client_config.current.project
+  project_number = data.google_project.project.number
+
+  bucket_name = "${data.google_client_config.current.project}-${var.bucket_name_suffix}"
 }
