@@ -28,6 +28,7 @@ resource "google_project_service" "services" {
     "servicenetworking.googleapis.com",
     "binaryauthorization.googleapis.com",
     "containersecurity.googleapis.com",
+    "gkehub.googleapis.com",
   ])
   service = each.key
 

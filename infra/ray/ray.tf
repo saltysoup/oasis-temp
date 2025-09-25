@@ -15,6 +15,7 @@
  */
 
 resource "kubernetes_manifest" "ray_cluster" {
+  # See: https://ray-project.github.io/kuberay/reference/api/#raycluster
   manifest = {
     "apiVersion" = "ray.io/v1"
     "kind"       = "RayCluster"
@@ -117,10 +118,11 @@ resource "kubernetes_manifest" "ray_cluster" {
       "rayVersion" = var.ray_version
       "workerGroupSpecs" = [
         {
-          "groupName"   = "gpu-group"
-          "replicas"    = 0
-          "maxReplicas" = 10
-          "minReplicas" = 0
+          "groupName"          = "gpu-group"
+          "replicas"           = 0
+          "maxReplicas"        = 2
+          "minReplicas"        = 0
+          "idleTimeoutSeconds" = 120
           "rayStartParams" = {
             "num-cpus" = "220"
           }

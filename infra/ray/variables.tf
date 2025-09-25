@@ -66,7 +66,7 @@ variable "secret_name" {
 variable "ray_cluster_idle_timeout_seconds" {
   type        = number
   description = "The duration, in seconds, that a worker node or pod can remain idle before it is scaled down or terminated by the autoscaler"
-  default     = 1800
+  default     = 120
 }
 
 variable "ray_version" {

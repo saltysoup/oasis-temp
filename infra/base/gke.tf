@@ -34,6 +34,23 @@ locals {
   )
 }
 
+resource "google_gke_hub_fleet" "default" {
+  display_name = "Oasis GKE fleet"
+
+  default_cluster_config {
+    binary_authorization_config {
+      evaluation_mode = "POLICY_BINDINGS"
+    }
+    security_posture_config {
+      mode               = "BASIC"
+      vulnerability_mode = "VULNERABILITY_BASIC"
+    }
+  }
+  depends_on = [
+    google_project_service.services,
+  ]
+}
+
 resource "google_container_cluster" "primary" {
   name     = var.cluster_name
   location = var.region
@@ -41,6 +58,10 @@ resource "google_container_cluster" "primary" {
   # The cluster uses your new custom management VPC for its control plane.
   network    = google_compute_network.management.name
   subnetwork = google_compute_subnetwork.management.name
+
+  fleet {
+    project = google_gke_hub_fleet.default.project
+  }
 
   # Ensure the cluster waits for ALL networks and permissions to be created.
   depends_on = [
@@ -65,6 +86,12 @@ resource "google_container_cluster" "primary" {
     oauth_scopes = [
       "https://www.googleapis.com/auth/cloud-platform"
     ]
+    gcfs_config {
+      # This enables image streaming for the node pool
+      # The cluster-level config will still indicate that
+      # image streaming is disabled.
+      enabled = true
+    }
   }
   node_locations = [var.zone]
 
@@ -120,6 +147,16 @@ resource "google_container_cluster" "primary" {
         enabled = true
       }
     }
+
+  }
+
+  cost_management_config {
+    enabled = true
+  }
+
+  security_posture_config {
+    mode               = "BASIC"
+    vulnerability_mode = "VULNERABILITY_BASIC"
   }
 
   secret_manager_config { enabled = true }
@@ -199,7 +236,11 @@ resource "google_container_node_pool" "primary_h200" {
       enable_integrity_monitoring = true
       enable_secure_boot          = true
     }
+    gcfs_config {
+      enabled = true
+    }
   }
+
 }
 
 
@@ -265,6 +306,9 @@ resource "google_container_node_pool" "spot_h200" {
     shielded_instance_config {
       enable_integrity_monitoring = true
       enable_secure_boot          = true
+    }
+    gcfs_config {
+      enabled = true
     }
   }
 }
