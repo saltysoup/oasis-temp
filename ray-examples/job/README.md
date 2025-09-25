@@ -1,5 +1,7 @@
 # Example stand-alone Ray jobs
 
+NOTE: This section is a work-in-progress.
+
 ## Sample job
 
 Run the sample jobs provided in

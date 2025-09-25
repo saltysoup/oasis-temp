@@ -72,6 +72,10 @@ You _may_ need to add `conda-forge` to your Conda channels:
 conda config --add channels conda-forge
 ```
 
+### `jq`
+
+See the [`jq` download page](https://jqlang.org/download/).
+
 ### Docker (optional)
 
 Docker may optionally be installed if you want to build your own container

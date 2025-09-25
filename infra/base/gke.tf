@@ -52,6 +52,7 @@ resource "google_gke_hub_fleet" "default" {
 }
 
 resource "google_container_cluster" "primary" {
+  provider = google-beta
   name     = var.cluster_name
   location = var.region
 
@@ -75,6 +76,10 @@ resource "google_container_cluster" "primary" {
   deletion_protection      = false
   initial_node_count       = 1
   remove_default_node_pool = false
+
+  cluster_autoscaling {
+    autoscaling_profile = "OPTIMIZE_UTILIZATION"
+  }
 
   node_config {
     machine_type    = "e2-standard-32"
@@ -158,6 +163,18 @@ resource "google_container_cluster" "primary" {
     mode               = "BASIC"
     vulnerability_mode = "VULNERABILITY_BASIC"
   }
+
+  protect_config {
+    workload_vulnerability_mode = "BASIC"
+    workload_config {
+      audit_mode = "BASIC"
+    }
+  }
+
+  binary_authorization {
+    evaluation_mode = "PROJECT_SINGLETON_POLICY_ENFORCE"
+  }
+
 
   secret_manager_config { enabled = true }
 

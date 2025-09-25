@@ -125,12 +125,73 @@ cd ../images/custom
 ./build_custom_image.sh
 ```
 
+Head back to the `images` directory:
+
+```sh
+cd ../
+```
+
+#### 2.b. (Optional) Configure binary authorization
+
+Once you've run a Cloud Build build in a Google Cloud project that has the
+Binary Authorization API enabled you can configure a policy that requires all
+containers to either be deployed by Google or built using Cloud Build. This
+helps stop folks from pushing an image from any random source.
+
+For the purposes of the demo you can enable a Binary Authorization policy that
+just "dry-runs" - it records a finding but doesn't stop anything from deploying.
+
+If you'd like to do this, run the following:
+
+```sh
+cd ../binauth
+tf init
+tf apply
+```
+
+You can check out Binary Authorization by deploying a sample app (see
+[Deploy an app to a GKE cluster](https://cloud.google.com/kubernetes-engine/docs/deploy-app-cluster)):
+
+```sh
+kubectl create deployment hello-server \
+    --image=us-docker.pkg.dev/google-samples/containers/gke/hello-app@sha256:8e836aef1ec98bf41189a7b14fa94434e97244fa9106461bef02d0696da20af8
+```
+
+You can now query the logs - it may take a minute or two to appear:
+
+```sh
+gcloud logging read --order="desc" --format json --freshness=1h \
+  'labels."imagepolicywebhook.image-policy.k8s.io/dry-run"="true"' \
+  | jq '.[].labels."imagepolicywebhook.image-policy.k8s.io/overridden-verification-result"'
+```
+
+You should see an entry similar to the one below:
+
+```
+"'us-docker.pkg.dev/google-samples/containers/gke/hello-app@sha256:8e836aef1ec98bf41189a7b14fa94434e97244fa9106461bef02d0696da20af8' : Image us-docker.pkg.dev/google-samples/containers/gke/hello-app@sha256:8e836aef1ec98bf41189a7b14fa94434e97244fa9106461bef02d0696da20af8 denied by attestor projects/<PROJECT ID>/attestors/built-by-cloud-build: No attestations found that were valid and signed by a key trusted by the attestor\n"
+```
+
+Clean up the sample app:
+
+```sh
+kubectl delete deployment hello-server
+```
+
+You can use this configuration as part of testing Ray on GKE - the logs will
+indicate which components are picked up by Binary Authorization. Once you're
+happy with the controls you can start enforcing the policies. Check out the
+[Binary Authorization overview](https://cloud.google.com/binary-authorization/docs/overview)
+for more details.
+
+Note that my testing indicated that directly deploying a `RayJob` appears to
+trigger a check but deploying to a `RayServer` does not.
+
 ### 3. Ray cluster
 
 Switch into the `ray` directory:
 
 ```sh
-cd ../../ray
+cd ../ray
 ```
 
 The Terraform configuration variables should appear in the `terraform.tfvars`
@@ -193,6 +254,13 @@ terraform destroy
 
 Note: You may have to run `destroy` more than once as some networking components
 take a while to be destroyed.
+
+If you deployed Binary Authorization:
+
+```sh
+cd ../binauth
+terraform destroy
+```
 
 To destroy the base infrastructure:
 
