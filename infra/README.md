@@ -99,7 +99,7 @@ We'll use the outputs in the deployment of the Ray cluster:
 terraform output >../ray/terraform.tfvars
 ```
 
-### 2. Build a Ray images
+### 2. Build Ray images
 
 This next step runs a script that will build the Ray server images using Cloud
 Build and deploy it to Artifact Registry.
