@@ -1,9 +1,9 @@
 # terraform.tfvars
 
-project_id         = "nm-ai-sandbox"
-project_number     = "820082097244"
-region             = "us-south1"
-zone               = "us-south1-b"
+project_id         = ""
+project_number     = ""
+region             = "us-central1"
+zone               = "us-central1-b"
 gvnic_network_prefix = "oasis-primary-tf"
 rdma_network_prefix  = "oasis-rdma-tf"
 gke_version        = "1.32.4-gke.1767000"

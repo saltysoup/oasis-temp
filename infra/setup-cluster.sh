@@ -5,8 +5,8 @@
 # Using same values deployed through TF
 export GVNIC_NETWORK_PREFIX="oasis-primary-tf"
 export RDMA_NETWORK_PREFIX="oasis-rdma-tf"
-export CLUSTER_NAME="oasis-h200-dws-tf"
-export REGION="us-south1"
+export CLUSTER_NAME="oasis-gpu-dws-spot"
+export REGION="us-central1"
 export KSA_NAME="oasis-ray"
 
 # Complete rest of cluster setup after TF deployment

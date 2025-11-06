@@ -1,25 +1,25 @@
 variable "project_id" {
   type        = string
   description = "The Google Cloud project ID."
-  default     = "nm-ai-sandbox"
+  default     = ""
 }
 
 variable "project_number" {
   type        = string
   description = "The Google Cloud project number."
-  default     = "820082097244"
+  default     = ""
 }
 
 variable "region" {
   type        = string
   description = "The Google Cloud region for resources."
-  default     = "us-south1"
+  default     = "us-central1"
 }
 
 variable "zone" {
   type        = string
   description = "The Google Cloud zone for resources."
-  default     = "us-south1-b"
+  default     = "us-central1-b"
 }
 
 variable "management_network_prefix" {
