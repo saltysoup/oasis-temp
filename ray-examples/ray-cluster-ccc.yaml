@@ -38,7 +38,7 @@ spec:
           cloud.google.com/gke-nodepool: "default-pool"
         containers:
         - name: ray-head
-          image: us-south1-docker.pkg.dev/nm-ai-sandbox/apollo2/raycluster:ray2.48.0-py3.12.11-cu12.6 
+          image: <yourImage> 
           env:
           - name: RAY_enable_autoscaler_v2
             value: "1"
@@ -70,7 +70,7 @@ spec:
             csi:
               driver: gcsfuse.csi.storage.gke.io
               volumeAttributes:
-                bucketName: oasis-ray
+                bucketName: <yourBucket>
                 gcsfuseMetadataPrefetchOnMount: "true"
                 mountOptions: "implicit-dirs,file-mode=777,dir-mode=777,file-cache:enable-parallel-downloads:true,file-cache:cache-file-for-range-read:true,file-cache:max-size-mb:-1,write:enable-streaming-writes:true,read_ahead_kb=1024,file-system:kernel-list-cache-ttl-secs:-1"
   workerGroupSpecs:
@@ -112,7 +112,7 @@ spec:
             effect: "NoSchedule"
         containers:
         - name: ray-worker
-          image: us-south1-docker.pkg.dev/nm-ai-sandbox/apollo2/raycluster:ray2.48.0-py3.12.11-cu12.6 
+          image: <yourImage> 
           env:
           - name: LD_LIBRARY_PATH
             value: /usr/local/nvidia/lib64
@@ -165,7 +165,7 @@ spec:
           csi:
             driver: gcsfuse.csi.storage.gke.io
             volumeAttributes:
-              bucketName: oasis-ray
+              bucketName: <yourBucket>
               gcsfuseMetadataPrefetchOnMount: "true"
               mountOptions: "implicit-dirs,file-mode=777,dir-mode=777,file-cache:enable-parallel-downloads:true,file-cache:cache-file-for-range-read:true,file-cache:max-size-mb:-1,write:enable-streaming-writes:true,read_ahead_kb=1024,file-system:kernel-list-cache-ttl-secs:-1"
 ---
