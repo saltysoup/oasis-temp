@@ -1,7 +1,20 @@
 # Oasis 🏝️
+<<<<<<< HEAD
 ## ML Training on GCP
 
 A proof-of-concept for migrating ML training infrastructure to Google Cloud Platform using Ray on GKE with Dynamic Workload Scheduling (DWS), Custom Compute Class, and H200 GPUs with RDMA support.
+=======
+## tl;dr
+
+1. update infra/TF/versions.tf
+2. update infra/TF/variables.tf
+3. update infra/TF/gpu-cluster.tfvars
+4. change directory to ray-examples/docker
+5. DOCKER_BUILDKIT=1 docker build -f Dockerfile . -t us-south1-docker.pkg.dev/gpu-launchpad-playground/ikwak-oasis-test/raycluster:latest
+6. Create a new AR repo - https://docs.cloud.google.com/artifact-registry/docs/repositories/create-repos#create-repo-gcloud-docker
+7. docker push us-south1-docker.pkg.dev/gpu-launchpad-playground/ikwak-oasis-test/raycluster:latest ref - https://docs.cloud.google.com/artifact-registry/docs/docker/pushing-and-pulling
+8. update ray-examples/ray-cluster-ccc.yaml (container image name, minReplica size, bucketName)
+>>>>>>> 932bff9 (fleep)
 
 ## Overview
 
@@ -59,3 +72,7 @@ Before setting up the Oasis POC, ensure you have:
 
 3. **Run Ray examples:**  
    Once the infrastructure is ready and the Ray cluster is up, navigate to the `ray-examples` folder for sample jobs, benchmarking scripts, and usage examples.
+<<<<<<< HEAD
+=======
+
+>>>>>>> 932bff9 (fleep)
