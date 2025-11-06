@@ -15,7 +15,7 @@
 apiVersion: ray.io/v1
 kind: RayJob
 metadata:
-  name: rayjob-test
+  name: ray-job-ccc
 spec:
   enableInTreeAutoscaling: true
   autoscalerOptions:
@@ -34,7 +34,7 @@ spec:
   enableInTreeAutoscaling: true
   autoscalerOptions:
     idleTimeoutSeconds: 7200 # warm period before node is shut down
-  rayVersion: '2.44.1'
+  rayVersion: '2.48.0'
   headGroupSpec:
     rayStartParams:
       dashboard-host: '0.0.0.0'
@@ -47,12 +47,12 @@ spec:
           gke-gcsfuse/ephemeral-storage-limit: "0"
       spec:
         restartPolicy: Never
-        serviceAccountName: "nearmap-ray"
+        serviceAccountName: "oasis-ray"
         nodeSelector:
           cloud.google.com/gke-nodepool: "default-pool"
         containers:
         - name: ray-head
-          image: us-south1-docker.pkg.dev/nm-ai-sandbox/ray/ray:2.44.1-py39-cu128
+          image: <yourImage>
           env:
           - name: RAY_enable_autoscaler_v2
             value: "1"
@@ -84,7 +84,7 @@ spec:
             csi:
               driver: gcsfuse.csi.storage.gke.io
               volumeAttributes:
-                bucketName: nearmap-ray
+                bucketName: <yourBucket>
                 gcsfuseMetadataPrefetchOnMount: "true"
                 mountOptions: "implicit-dirs,file-mode=777,dir-mode=777,file-cache:enable-parallel-downloads:true,file-cache:cache-file-for-range-read:true,file-cache:max-size-mb:-1,write:enable-streaming-writes:true,read_ahead_kb=1024,file-system:kernel-list-cache-ttl-secs:-1"
   workerGroupSpecs:
@@ -117,7 +117,7 @@ spec:
             ]
       spec:
         restartPolicy: Never
-        serviceAccountName: "nearmap-ray"
+        serviceAccountName: "oasis-ray"
         nodeSelector:
           cloud.google.com/compute-class: "h200-ccc"
         tolerations:
@@ -126,7 +126,7 @@ spec:
             effect: "NoSchedule"
         containers:
         - name: ray-worker
-          image: us-south1-docker.pkg.dev/nm-ai-sandbox/ray/ray:2.44.1-py39-cu128
+          image: <yourImage>
           env:
           - name: LD_LIBRARY_PATH
             value: /usr/local/nvidia/lib64
@@ -179,7 +179,7 @@ spec:
           csi:
             driver: gcsfuse.csi.storage.gke.io
             volumeAttributes:
-              bucketName: nearmap-ray
+              bucketName: <yourBucket>
               gcsfuseMetadataPrefetchOnMount: "true"
               mountOptions: "implicit-dirs,file-mode=777,dir-mode=777,file-cache:enable-parallel-downloads:true,file-cache:cache-file-for-range-read:true,file-cache:max-size-mb:-1,write:enable-streaming-writes:true,read_ahead_kb=1024,file-system:kernel-list-cache-ttl-secs:-1"
 ---
@@ -199,7 +199,7 @@ spec:
       protocol: TCP
       name: client
   selector:
-    ray.io/cluster: ray-cluster-ccc
+    ray.io/cluster: ray-job-ccc
     ray.io/node-type: head
 ---
 apiVersion: networking.k8s.io/v1
