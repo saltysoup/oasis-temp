@@ -1,8 +1,8 @@
 terraform {
   # This block configures Terraform to store its state file remotely in GCS.
   backend "gcs" {
-    bucket = "ikwak-tf"
-    prefix = "oasis/h200-dws"
+    bucket = "<bucket>"
+    prefix = "oasis"
   }
 
   required_providers {
