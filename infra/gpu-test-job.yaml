@@ -1,0 +1,22 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: gpu-test-job
+spec:
+  template:
+    spec:
+      containers:
+      - name: gpu-test
+        image: nvidia/cuda:12.3.1-base-ubuntu22.04
+        command: ["nvidia-smi"]
+        resources:
+          limits:
+            nvidia.com/gpu: 1
+      restartPolicy: Never
+      nodeSelector:
+        cloud.google.com/compute-class: "b40-ccc"
+      tolerations:
+      - key: "cloud.google.com/compute-class"
+        operator: "Equal"
+        value: "b40-ccc"
+        effect: "NoSchedule"

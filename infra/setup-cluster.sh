@@ -3,7 +3,7 @@
 ## RUN THIS SCRIPT AFTER DEPLOYING TF
 
 # Using same values deployed through TF
-export CLUSTER_NAME="loom-b40-gke-tf"
+export CLUSTER_NAME="b40-test-tf"
 export REGION="us-central1"
 export KSA_NAME="loom-b40"
 
