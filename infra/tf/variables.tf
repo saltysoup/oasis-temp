@@ -104,7 +104,7 @@ variable "gpu_type_mig" {
 variable "gpu_partition_size_mig" {
   type        = string
   description = "GPU MIG partition size to attach to the nodes."
-  default     = "1g.24gb+gfx"
+  default     = "1g.24gb"
 }
 
 variable "gpu_count" {

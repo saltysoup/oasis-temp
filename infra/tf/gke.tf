@@ -137,7 +137,7 @@ resource "google_container_node_pool" "b40-spot-ccc" {
 
   management {
     auto_repair = false
-    auto_upgrade = false
+    auto_upgrade = true
   }
 
   node_config {
@@ -180,7 +180,7 @@ resource "google_container_node_pool" "b40-dws-ccc" {
 
   management {
     auto_repair = false
-    auto_upgrade = false
+    auto_upgrade = true
   }
 
   node_config {
