@@ -25,7 +25,7 @@ variable "zone" {
 variable "management_network_prefix" {
   type        = string
   description = "The prefix for the GKE management VPC and subnet names."
-  default     = "oasis-mgmt-tf"
+  default     = "b40-mgmt-tf"
 }
 
 variable "management_cidr_range" {
@@ -37,26 +37,13 @@ variable "management_cidr_range" {
 variable "gvnic_network_prefix" {
   type        = string
   description = "The prefix for the primary GVNIC data VPC and subnet names."
-  default     = "oasis-primary-tf"
+  default     = "b40-primary-tf"
 }
 
 variable "gvnic_cidr_range" {
   type        = string
   description = "The CIDR range for the primary GVNIC data subnet."
   default     = "10.100.100.0/24"
-}
-
-# ADD THIS BLOCK
-variable "rdma_network_prefix" {
-  type        = string
-  description = "The prefix for the RDMA VPC and subnet names."
-  default     = "oasis-rdma-tf"
-}
-
-variable "rdma_cidr_prefix" {
-  type        = string
-  description = "The first two octets for the RDMA subnet CIDR ranges."
-  default     = "10.101"
 }
 
 variable "firewall_source_range" {
@@ -74,37 +61,63 @@ variable "gke_version" {
 variable "cluster_name" {
   type        = string
   description = "The name of the GKE cluster."
-  default     = "oasis-h200-dws-tf"
+  default     = "loom-b40-gke-tf"
 }
 
-variable "nodepool_name" {
+variable "nodepool_name_ondemand" {
   type        = string
-  description = "The name of the primary H200 node pool."
-  default     = "h200-dws-ccc"
+  description = "The name of the primary b40 node pool."
+  default     = "b40-ondemand-ccc"
+}
+
+variable "nodepool_name_mig" {
+  type        = string
+  description = "The name of the primary b40 node pool."
+  default     = "b40-ondemand-mig"
 }
 
 variable "nodepool_name_spot" {
   type        = string
-  description = "The name of the spot H200 node pool."
-  default     = "h200-spot-ccc"
+  description = "The name of the spot b40 node pool."
+  default     = "b40-spot-ccc"
+}
+
+variable "nodepool_name_dws" {
+  type        = string
+  description = "The name of the primary b40 node pool."
+  default     = "b40-dws-ccc"
 }
 
 variable "gpu_type" {
   type        = string
   description = "The type of GPU to attach to the nodes."
-  default     = "nvidia-h200-141gb"
+  default     = "nvidia-rtx-pro-6000"
+}
+
+variable "gpu_type_mig" {
+  type        = string
+  description = "GPU MIG accelerator and profile name to attach to the nodes."
+  default     = "nvidia-rtx-pro-6000"
+}
+
+# Ref https://docs.nvidia.com/datacenter/tesla/mig-user-guide/supported-mig-profiles.html#rtx-pro-6000-blackwell-mig-profiles
+variable "gpu_partition_size_mig" {
+  type        = string
+  description = "GPU MIG partition size to attach to the nodes."
+  default     = "1g.24gb+gfx"
 }
 
 variable "gpu_count" {
   type        = number
   description = "The number of GPUs to attach per VM."
-  default     = 8
+  default     = 1
 }
 
+# ref https://docs.cloud.google.com/compute/docs/gpus#rtx-6000-gpus
 variable "machine_type" {
   type        = string
   description = "The machine type for the GPU nodes."
-  default     = "a3-ultragpu-8g"
+  default     = "g4-standard-48"
 }
 
 variable "total_max_nodes" {
@@ -122,17 +135,17 @@ variable "gpu_driver_version" {
 variable "bucket_name" {
   type        = string
   description = "The name of the GCS bucket for training data."
-  default     = "oasis-ray-tf"
+  default     = "loom-b40-tf"
 }
 
 variable "ksa_name" {
   type        = string
   description = "The name of the Kubernetes Service Account for Workload Identity."
-  default     = "oasis-ray"
+  default     = "loom-b40"
 }
 
 variable "secret_name" {
   type        = string
   description = "The name of the Secret Manager secret."
-  default     = "oasis-secrets"
+  default     = "loom-b40"
 }

@@ -3,20 +3,14 @@
 ## RUN THIS SCRIPT AFTER DEPLOYING TF
 
 # Using same values deployed through TF
-export GVNIC_NETWORK_PREFIX="oasis-primary-tf"
-export RDMA_NETWORK_PREFIX="oasis-rdma-tf"
-export CLUSTER_NAME="oasis-gpu-dws-spot"
+export CLUSTER_NAME="loom-b40-gke-tf"
 export REGION="us-central1"
-export KSA_NAME="oasis-ray"
+export KSA_NAME="loom-b40"
 
 # Complete rest of cluster setup after TF deployment
 gcloud container clusters get-credentials $CLUSTER_NAME --location=$REGION
 
-# Apply GKE networking, CCC and RDMA sidecar for RoCE
-envsubst < gke-networks.yaml | kubectl apply -f -
+# Apply CCC to cluster
 kubectl apply -f ccc.yaml
-# For GKE standard cluster
-kubectl apply -f https://raw.githubusercontent.com/GoogleCloudPlatform/container-engine-accelerators/refs/heads/master/gpudirect-rdma/nccl-rdma-installer.yaml
-
 # Create KSA - IAM permissions has been updated for $KSA_NAME in tf/iam.tf
 kubectl create serviceaccount $KSA_NAME

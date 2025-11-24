@@ -15,27 +15,35 @@
 apiVersion: cloud.google.com/v1
 kind: ComputeClass
 metadata:
-  name: h200-ccc
+  name: b40-ccc
 spec:
   activeMigration:
     optimizeRulePriority: false
   priorities:
-  - machineType: a3-ultragpu-8g
+  - machineType: g4-standard-48
     storage:
-      localSSDCount: 32
-  - nodepools: ['h200-dws-ccc']
+      localSSDCount: 4
+  - nodepools: ['b40-ondemand-ccc']
   - gpu:
-      type: "nvidia-h200-141gb"
-      count: 8
+      type: "nvidia-rtx-pro-6000"
+      count: 1
+      driverVersion: "latest"
+  - machineType: g4-standard-48
+    storage:
+      localSSDCount: 4
+  - nodepools: ['b40-spot-ccc']
+  - gpu:
+      type: "nvidia-rtx-pro-6000"
+      count: 1
+      driverVersion: "latest"
+    spot: true
+  - machineType: g4-standard-48
+    storage:
+      localSSDCount: 4
+  - nodepools: ['b40-dws-ccc']
+  - gpu:
+      type: "nvidia-rtx-pro-6000"
+      count: 1
       driverVersion: "latest"
   - flexStart:
       enabled: true
-  - machineType: a3-ultragpu-8g
-    storage:
-      localSSDCount: 32
-  - nodepools: ['h200-spot-ccc']
-  - gpu:
-      type: "nvidia-h200-141gb"
-      count: 8
-      driverVersion: "latest"
-  - spot: true

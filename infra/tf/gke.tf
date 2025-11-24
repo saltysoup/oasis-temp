@@ -1,23 +1,7 @@
-# GKE standard cluster with 2 node pools (DWS flex and Spot) using RDMA networking. Used by custom compute class for scaling out GPU nodes
+# GKE standard cluster with 4 node pools (on-demand, on-demand with GPU MIG, spot and DWS flex).
+# Used by custom compute class for scaling out GPU nodes, except for GPU MIG nodepool (roadmap in Q1 2026)
 
 # gke.tf
-
-locals {
-  # This list contains the 9 additional networks (1 GVNIC + 8 RDMA)
-  # to be attached to each node's additional interfaces. The first GVNIC networking is inherited from cluster
-  all_additional_node_networks = concat(
-    [{
-      network    = google_compute_network.gvnics.name
-      subnetwork = google_compute_subnetwork.gvnics.name
-    }],
-    [
-      for i in range(8) : {
-        network    = google_compute_network.rdma.name
-        subnetwork = google_compute_subnetwork.rdma[i].name
-      }
-    ]
-  )
-}
 
 resource "google_container_cluster" "primary" {
   name     = var.cluster_name
@@ -30,8 +14,6 @@ resource "google_container_cluster" "primary" {
   # Ensure the cluster waits for ALL networks and permissions to be created.
   depends_on = [
     google_compute_subnetwork.management,
-    google_compute_subnetwork.gvnics,
-    google_compute_subnetwork.rdma,
     google_project_iam_member.gke_service_agent_network_user
   ]
 
@@ -39,7 +21,7 @@ resource "google_container_cluster" "primary" {
   initial_node_count       = 1
   remove_default_node_pool = false
   node_config {
-    machine_type = "e2-standard-32"
+    machine_type = "e2-standard-8"
   }
   node_locations = [var.zone]
 
@@ -49,16 +31,100 @@ resource "google_container_cluster" "primary" {
 
   addons_config {
     gcs_fuse_csi_driver_config { enabled = true }
-    ray_operator_config { enabled = true }
+
   }
   secret_manager_config { enabled = true }
   workload_identity_config { workload_pool = "${var.project_id}.svc.id.goog" }
 }
 
-resource "google_container_node_pool" "primary_h200" {
+resource "google_container_node_pool" "b40-ondemand-ccc" {
   provider = google-beta
 
-  name       = var.nodepool_name
+  name       = var.nodepool_name_ondemand
+  cluster    = google_container_cluster.primary.name
+  location   = var.region
+  node_count = 0
+
+  autoscaling {
+    location_policy      = "ANY"
+    total_min_node_count = 0
+    total_max_node_count = var.total_max_nodes
+  }
+
+  management {
+    auto_repair = true
+    auto_upgrade = true
+  }
+
+  node_config {
+    machine_type = var.machine_type
+    spot         = false
+    flex_start   = false
+
+    gvnic {
+      enabled = true
+    }
+    guest_accelerator {
+      type  = var.gpu_type
+      count = var.gpu_count
+      gpu_driver_installation_config {
+        gpu_driver_version = var.gpu_driver_version
+      }
+    }
+    labels = { "cloud.google.com/compute-class" = "b40-ccc" } # has to match the compute class name in ccc.yaml
+    taint {
+      key    = "cloud.google.com/compute-class"
+      value  = "b40-ccc"
+      effect = "NO_SCHEDULE"
+    }
+    reservation_affinity { consume_reservation_type = "NO_RESERVATION" }
+  }
+}
+
+# not using ccc as gpu mig not supported yet
+resource "google_container_node_pool" "b40-ondemand-mig" {
+  provider = google-beta
+
+  name       = var.nodepool_name_mig
+  cluster    = google_container_cluster.primary.name
+  location   = var.region
+  node_count = 0
+
+  autoscaling {
+    location_policy      = "ANY"
+    total_min_node_count = 0
+    total_max_node_count = var.total_max_nodes
+  }
+
+  management {
+    auto_repair = true
+    auto_upgrade = true
+  }
+
+  node_config {
+    machine_type = var.machine_type
+    spot         = false
+    flex_start   = false
+
+    gvnic {
+      enabled = true
+    }
+    guest_accelerator {
+      type  = var.gpu_type_mig
+      gpu_partition_size = var.gpu_partition_size_mig
+      count = var.gpu_count
+      gpu_driver_installation_config {
+        gpu_driver_version = var.gpu_driver_version
+      }
+    }
+    reservation_affinity { consume_reservation_type = "NO_RESERVATION" }
+  }
+}
+
+resource "google_container_node_pool" "b40-spot-ccc" {
+  provider = google-beta
+
+  name       = var.nodepool_name_spot
   cluster    = google_container_cluster.primary.name
   location   = var.region
   node_count = 0
@@ -71,23 +137,55 @@ resource "google_container_node_pool" "primary_h200" {
 
   management {
     auto_repair = false
+    auto_upgrade = false
   }
 
-  network_config {
-    dynamic "additional_node_network_configs" {
-      for_each = local.all_additional_node_networks
-      content {
-        network    = additional_node_network_configs.value.network
-        subnetwork = additional_node_network_configs.value.subnetwork
+  node_config {
+    machine_type = var.machine_type
+    spot         = true
+    flex_start   = false
+
+    gvnic {
+      enabled = true
+    }
+    guest_accelerator {
+      type  = var.gpu_type
+      count = var.gpu_count
+      gpu_driver_installation_config {
+        gpu_driver_version = var.gpu_driver_version
       }
     }
+    labels = { "cloud.google.com/compute-class" = "b40-ccc" } # has to match the compute class name in ccc.yaml
+    taint {
+      key    = "cloud.google.com/compute-class"
+      value  = "b40-ccc"
+      effect = "NO_SCHEDULE"
+    }
+    reservation_affinity { consume_reservation_type = "NO_RESERVATION" }
+  }
+}
+resource "google_container_node_pool" "b40-dws-ccc" {
+  provider = google-beta
+
+  name       = var.nodepool_name_dws
+  cluster    = google_container_cluster.primary.name
+  location   = var.region
+  node_count = 0
+
+  autoscaling {
+    location_policy      = "ANY"
+    total_min_node_count = 0
+    total_max_node_count = var.total_max_nodes
+  }
+
+  management {
+    auto_repair = false
+    auto_upgrade = false
   }
 
   node_config {
     machine_type = var.machine_type
     spot         = false
-
-    # UPDATED: Changed from a block to a boolean argument, per the error message.
     flex_start   = true
 
     gvnic {
@@ -100,60 +198,10 @@ resource "google_container_node_pool" "primary_h200" {
         gpu_driver_version = var.gpu_driver_version
       }
     }
-    labels = { "cloud.google.com/compute-class" = "h200-ccc" }
+    labels = { "cloud.google.com/compute-class" = "b40-ccc" } # has to match the compute class name in ccc.yaml
     taint {
       key    = "cloud.google.com/compute-class"
-      value  = "h200-ccc"
-      effect = "NO_SCHEDULE"
-    }
-    reservation_affinity { consume_reservation_type = "NO_RESERVATION" }
-  }
-}
-
-resource "google_container_node_pool" "spot_h200" {
-  provider = google-beta
-
-  name       = var.nodepool_name_spot
-  cluster    = google_container_cluster.primary.name
-  location   = var.region
-  node_count = 0
-
-  autoscaling {
-    min_node_count = 0
-    max_node_count = var.total_max_nodes
-  }
-
-  management {
-    auto_repair = false
-  }
-
-  network_config {
-    dynamic "additional_node_network_configs" {
-      for_each = local.all_additional_node_networks
-      content {
-        network    = additional_node_network_configs.value.network
-        subnetwork = additional_node_network_configs.value.subnetwork
-      }
-    }
-  }
-
-  node_config {
-    machine_type = var.machine_type
-    spot         = true
-    gvnic {
-      enabled = true
-    }
-    guest_accelerator {
-      type  = var.gpu_type
-      count = var.gpu_count
-      gpu_driver_installation_config {
-        gpu_driver_version = var.gpu_driver_version
-      }
-    }
-    labels = { "cloud.google.com/compute-class" = "h200-ccc" }
-    taint {
-      key    = "cloud.google.com/compute-class"
-      value  = "h200-ccc"
+      value  = "b40-ccc"
       effect = "NO_SCHEDULE"
     }
     reservation_affinity { consume_reservation_type = "NO_RESERVATION" }

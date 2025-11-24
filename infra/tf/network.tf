@@ -1,4 +1,4 @@
-# Create 3 x VPCs (2 x gVNIC for north/south traffic and 1 x RDMA for east/west traffic for GPU to GPU comms)
+# Create 1 x VPC
 
 # networking.tf
 
@@ -50,21 +50,4 @@ resource "google_compute_firewall" "gvnics_internal" {
     protocol = "all"
   }
   source_ranges = [var.firewall_source_range]
-}
-
-# ----------------------------------
-# RDMA HPC Network (for nic2-nic9)
-# ----------------------------------
-resource "google_compute_network" "rdma" {
-  name                    = "${var.rdma_network_prefix}-net"
-  auto_create_subnetworks = false
-  network_profile         = "projects/${var.project_id}/global/networkProfiles/${var.zone}-vpc-roce"
-}
-
-resource "google_compute_subnetwork" "rdma" {
-  count         = 8
-  name          = "${var.rdma_network_prefix}-sub-${count.index}"
-  ip_cidr_range = "${var.rdma_cidr_prefix}.${count.index + 1}.0/24"
-  network       = google_compute_network.rdma.name
-  region        = var.region
 }
