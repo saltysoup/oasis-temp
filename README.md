@@ -1,78 +1,68 @@
-# Oasis 🏝️
-<<<<<<< HEAD
-## ML Training on GCP
+# Infra Setup
 
-A proof-of-concept for migrating ML training infrastructure to Google Cloud Platform using Ray on GKE with Dynamic Workload Scheduling (DWS), Custom Compute Class, and H200 GPUs with RDMA support.
-=======
-## tl;dr
+This document outlines the infrastructure components, setup instructions, and deployment steps for this project.
 
-1. update infra/TF/versions.tf
-2. update infra/TF/variables.tf
-3. update infra/TF/gpu-cluster.tfvars
-4. change directory to ray-examples/docker
-5. DOCKER_BUILDKIT=1 docker build -f Dockerfile . -t us-south1-docker.pkg.dev/gpu-launchpad-playground/ikwak-oasis-test/raycluster:latest
-6. Create a new AR repo - https://docs.cloud.google.com/artifact-registry/docs/repositories/create-repos#create-repo-gcloud-docker
-7. docker push us-south1-docker.pkg.dev/gpu-launchpad-playground/ikwak-oasis-test/raycluster:latest ref - https://docs.cloud.google.com/artifact-registry/docs/docker/pushing-and-pulling
-8. update ray-examples/ray-cluster-ccc.yaml (container image name, minReplica size, bucketName)
->>>>>>> 932bff9 (fleep)
+## Infrastructure Components
 
-## Overview
+The Proof of Concept (POC) will create the following infrastructure components:
 
-This POC demonstrates a modern, scalable, and open ML training infrastructure with high obtainability that includes:
+*   **Networking:**
+    *   1 x Standard VPC (for north-south traffic)
+*   **Kubernetes (GKE):**
+    *   GKE cluster
+    *   GCS Fuse addon for GKE.
+    *   Custom Compute Class with provisioning starting with on-demand, then falling back to Spot and DWS flex.
+    *   GCS bucket for training/inference data.
+*   **Identity & Access Management (IAM):**
+    *   IAM policies to grant Kubernetes service accounts access to the GCS bucket and GCP secrets.
 
-- **GKE Cluster** with multi-networking enabled
-- **Google Infinity Band** networking with RDMA support
-- **NCCL** for GPU-to-GPU communication
-- **Dynamic Workload Scheduling (DWS)** for on-demand resource provisioning
-- **Autoscaling** with Custom Compute Class
-- **Distributed Training** using Ray Train
-- **Conda support** for environment management
-- **GCS Fuse** for cloud storage integration
-- **Artifact Registry** for container images
-- **Weights & Biases** integration for experiment tracking
-- **GCP Secrets** for secure credential management
+## Setup Instructions
 
-## Architecture
+### 1. Infrastructure Provisioning
 
-The infrastructure consists of:
-- A3 Ultra VMs with 8x H200 GPUs per node
-- RDMA networking for ultra-fast GPU communication
-- Ray cluster with autoscaling capabilities
-- Custom Compute Class for resource management
-- Spot instance fallback for cost optimization
+Note: on-demand with MIG support is still WIP, dont use for now
 
-![Oasis Architecture](architecture.png)
+Deploy the cloud infrastructure using Terraform.
 
-## Prerequisites
+1.  Navigate to the Terraform directory:
+    ```bash
+    cd infra/tf
+    ```
+2.  Initialize, update and apply the Terraform configuration:
+    ```bash
+    terraform init
+    terraform apply -var-file="gpu-cluster.tfvars"
+    ```
 
-Before setting up the Oasis POC, ensure you have:
+The `terraform apply` command will deploy the following cloud resources:
 
-**gcloud CLI** installed and authenticated
-   - [Install gcloud CLI](https://cloud.google.com/sdk/docs/install)
-   - [Initialize and authenticate gcloud](https://cloud.google.com/sdk/docs/initializing)
+*   `gcs.tf`: GCS bucket for training data.
+*   `gke.tf`: GKE Standard cluster with on-demand, on-demand with MIG, DWS Flex, and Spot `g4-standard-48` (RTX Pro 6000 aka B40) nodepools.
+*   `gpu-cluster.tfvars`, `variables.tf`: Environment variables.
+*   `iam.tf`: IAM policies to grant the Kubernetes service account read-write access to the training data bucket and read-access to GCP Secrets.
+*   `network.tf`: 1 x VPC, subnets, and firewall rules for gVNICs
 
+### 2. GKE Cluster Setup
 
-**kubectl** installed and configured
-   - [Install kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/)
-   - [Configure kubectl for GKE](https://cloud.google.com/kubernetes-engine/docs/how-to/cluster-access-for-kubectl)
+After the GKE cluster is deployed by Terraform, complete the cluster setup by running the following script:
 
-**Docker** installed (for building container images)
-   - [Install Docker Desktop](https://docs.docker.com/desktop/install/)
-   - [Docker Engine installation](https://docs.docker.com/engine/install/)
-   - [Configure Docker for GCP](https://cloud.google.com/artifact-registry/docs/docker/pushing-and-pulling#auth)
+```bash
+cd infra
+bash setup-cluster.sh
+```
 
-## Getting Started
+This script will:
 
-1. **Set up the infrastructure first:**  
-   Follow the steps in the `infra` directory to provision the GCP resources, configure the GKE cluster, and set up all required services and secrets.  
-   _You must complete the infrastructure setup before running any Ray jobs or examples._
+*   Install the custom compute class.
+*   Set up the Kubernetes service account (used for GCS Fuse access for worker pods).
 
-2. **Docker Image Setup (Optional):**  
-   If you want to build a custom Ray image with additional dependencies, follow the instructions in the [`docker/README.md`](docker/README.md) file. This step is optional as the current configuration uses a pre-built image that's ready to use.
+### 3. Deploy Sample job
 
-3. **Run Ray examples:**  
-   Once the infrastructure is ready and the Ray cluster is up, navigate to the `ray-examples` folder for sample jobs, benchmarking scripts, and usage examples.
-<<<<<<< HEAD
-=======
+Once the GKE cluster is set up, proceed to deploying a sample GPU job. This will automatically scale up the GPU nodes as needed.
 
->>>>>>> 932bff9 (fleep)
+Refer to the `gpu-test-job.yaml` for detailed job instructions.
+
+```
+kubectl apply -f gpu-test-job.yaml
+# then check the pod and logs to see output of nvidia-smi
+```
