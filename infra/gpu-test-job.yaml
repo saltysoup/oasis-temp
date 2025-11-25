@@ -7,16 +7,25 @@ spec:
     spec:
       containers:
       - name: gpu-test
-        image: nvidia/cuda:12.3.1-base-ubuntu22.04
+        image: nvidia/cuda:12.8.1-base-ubuntu22.04
+        env:
+        - name: PATH
+          value: "/usr/local/nvidia/bin:/usr/local/cuda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+        - name: LD_LIBRARY_PATH
+          value: "/usr/local/nvidia/lib64:/usr/local/cuda/lib64"
         command: ["nvidia-smi"]
         resources:
           limits:
             nvidia.com/gpu: 1
       restartPolicy: Never
       nodeSelector:
-        cloud.google.com/compute-class: "b40-ccc"
+        #cloud.google.com/gke-nodepool: "b40-ondemand-mig" # to test gpu mig (not supported by ccc yet)
+        cloud.google.com/compute-class: "b40-ccc"  # to test on-demand,spot,dws flex
       tolerations:
       - key: "cloud.google.com/compute-class"
         operator: "Equal"
         value: "b40-ccc"
+        effect: "NoSchedule"
+      - key: "nvidia.com/gpu"
+        operator: "Exists"
         effect: "NoSchedule"
