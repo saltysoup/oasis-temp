@@ -1,0 +1,24 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: gpu-test-job-mig
+spec:
+  template:
+    spec:
+      containers:
+      - name: gpu-test
+        image: nvidia/cuda:12.8.1-base-ubuntu22.04
+        env:
+        - name: PATH
+          value: "/usr/local/nvidia/bin:/usr/local/cuda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+        - name: LD_LIBRARY_PATH
+          value: "/usr/local/nvidia/lib64:/usr/local/cuda/lib64"
+        command: ["nvidia-smi"]
+        resources:
+          limits:
+            nvidia.com/gpu: 1
+      restartPolicy: Never
+      nodeSelector:
+        cloud.google.com/gke-gpu-partition-size: "1g.24gb"
+        #cloud.google.com/gke-nodepool: "b40-test3" # to test GPU ondemand
+        #cloud.google.com/compute-class: "b40-ccc"  # to test on-demand,spot,dws flex
