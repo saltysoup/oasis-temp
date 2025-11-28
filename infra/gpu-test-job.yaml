@@ -19,7 +19,6 @@ spec:
             nvidia.com/gpu: 1
       restartPolicy: Never
       nodeSelector:
-        #cloud.google.com/gke-nodepool: "b40-ondemand-mig" # to test gpu mig (not supported by ccc yet)
         cloud.google.com/compute-class: "b40-ccc"  # to test on-demand,spot,dws flex
       tolerations:
       - key: "cloud.google.com/compute-class"

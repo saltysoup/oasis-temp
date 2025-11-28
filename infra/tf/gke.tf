@@ -7,6 +7,11 @@ resource "google_container_cluster" "primary" {
   name     = var.cluster_name
   location = var.region
 
+  min_master_version = var.gke_version
+  release_channel {
+    channel = var.release_channel
+  }
+
   # The cluster uses your new custom management VPC for its control plane.
   network    = google_compute_network.management.name
   subnetwork = google_compute_subnetwork.management.name

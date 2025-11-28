@@ -55,7 +55,13 @@ variable "firewall_source_range" {
 variable "gke_version" {
   type        = string
   description = "The GKE version for the cluster."
-  default     = "1.32.4-gke.1767000"
+  default     = "1.34.1-gke.2037001"
+}
+
+variable "release_channel" {
+  type        = string
+  description = "The release channel of this cluster. Accepted values are `UNSPECIFIED`, `RAPID`, `REGULAR` and `STABLE`. Defaults to `UNSPECIFIED`."
+  default     = "RAPID"
 }
 
 variable "cluster_name" {
